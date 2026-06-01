@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ระบบลงเวลาปฏิบัติงาน พิมานใจ โฮมแคร์</title>
+  <style>
+    :root{--green:#8bd35a;--dark:#1f2937;--line:#111827;--bg:#f6f7fb;--card:#fff}
+    *{box-sizing:border-box} body{margin:0;font-family:"Sarabun","Tahoma",sans-serif;background:var(--bg);color:var(--dark)}
+    header{background:#fff;padding:18px 24px;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:2}
+    h1{margin:0;text-align:center;font-size:26px}.sub{text-align:center;font-size:18px;margin-top:6px}
+    .wrap{max-width:1180px;margin:20px auto;padding:0 14px}.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 8px 24px #00000012;margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px} label{font-weight:700;font-size:14px} input,select,textarea,button{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;font-size:15px}
+    button{cursor:pointer;background:#2563eb;color:white;border:0;font-weight:700}.btn2{background:#059669}.btn3{background:#6b7280}.btn4{background:#dc2626}.btn5{background:#7c3aed}
+    table{width:100%;border-collapse:collapse;background:white} th,td{border:1.4px solid var(--line);padding:7px;text-align:center;vertical-align:middle} th{background:#f3f4f6}.left{text-align:left}.shift{background:var(--green);font-weight:700;white-space:pre-line}.small{font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{width:auto;padding:9px 14px}
+    .signature{font-family:"Brush Script MT",cursive;font-size:20px}.hide{display:none}
+    @media(max-width:900px){.grid{grid-template-columns:1fr 1fr} table{font-size:13px}.wrap{padding:0 6px}}
+    @media print{body{background:white} header,.no-print,.card.form{display:none}.wrap{max-width:none;margin:0}.card{box-shadow:none;border-radius:0;padding:0} th,td{padding:6px} .print-title{display:block!important;text-align:center;margin-bottom:10px} }
+  </style>
+</head>
+<body>
+<header>
+  <h1>พิมานใจ โฮมแคร์</h1>
+  <div class="sub">ระบบลงเวลาปฏิบัติงานศูนย์ดูแลผู้สูงอายุ</div>
+</header>
+<div class="wrap">
+  <div class="card form no-print">
+    <h2>บันทึกลงเวลา</h2>
+    <div class="grid">
+      <div><label>วันที่</label><input id="workDate" type="date"></div>
+      <div><label>รอบเวร</label><select id="shift"><option value="07.00-19.00น.">กลางวัน 07.00-19.00น.</option><option value="19.00-07.00น.">กลางคืน 19.00-07.00น.</option></select></div>
+      <div><label>ชื่อ - สกุล</label><input id="fullName" placeholder="เช่น นางสาว..." /></div>
+      <div><label>ตำแหน่ง</label><select id="position"><option>CM</option><option>CG</option><option>แม่บ้าน</option><option>พยาบาล</option><option>อื่น ๆ</option></select></div>
+      <div><label>เวลามา</label><input id="timeIn" type="time"></div>
+      <div><label>เวลากลับ</label><input id="timeOut" type="time"></div>
+      <div><label>ลงชื่อ</label><input id="signature" placeholder="พิมพ์ชื่อ/ลายเซ็น" /></div>
+      <div style="grid-column:span 3"><label>หมายเหตุ</label><input id="note" placeholder="เช่น ลาป่วย/มาสาย/OT" /></div>
+      <div><label>เดือนรายงาน</label><input id="reportMonth" type="month"></div>
+      <div><label>&nbsp;</label><button onclick="saveRecord()" class="btn2">บันทึก</button></div>
+    </div>
+    <p class="small">ข้อมูลถูกเก็บในเครื่องนี้ผ่าน LocalStorage สามารถส่งออก CSV และพิมพ์เป็นสมุดลงเวลาได้</p>
+  </div>
+
+  <div class="card no-print">
+    <div class="actions">
+      <button onclick="renderTable()">รีเฟรช</button>
+      <button onclick="exportCSV()" class="btn5">ส่งออก Excel/CSV</button>
+      <button onclick="window.print()" class="btn3">พิมพ์รายงาน</button>
+      <button onclick="clearAll()" class="btn4">ล้างข้อมูลทั้งหมด</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="print-title hide">
+      <h2>สมุดปฏิบัติงาน</h2>
+      <h3 id="printSub">หน่วยงาน พิมานใจ โฮมแคร์</h3>
+    </div>
+    <table id="attendanceTable">
+      <thead>
+        <tr><th style="width:150px">วันที่</th><th>ชื่อ - สกุล</th><th style="width:100px">ตำแหน่ง</th><th style="width:95px">เวลามา</th><th style="width:95px">เวลากลับ</th><th style="width:130px">ลงชื่อ</th><th>หมายเหตุ</th><th class="no-print" style="width:90px">จัดการ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let editId = null;
+const key = 'pimanjai_attendance_v1';
+const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function nowTime(){ return new Date().toTimeString().slice(0,5); }
+function load(){ return JSON.parse(localStorage.getItem(key) || '[]'); }
+function store(data){ localStorage.setItem(key, JSON.stringify(data)); }
+function beYear(dateStr){ return new Date(dateStr).getFullYear() + 543; }
+function thDate(dateStr){ const d = new Date(dateStr+'T00:00:00'); return `${d.getDate()}/${thaiMonths[d.getMonth()].slice(0,3)}./${d.getFullYear()+543}`; }
+function selectedMonth(){ return $('reportMonth').value || todayISO().slice(0,7); }
+function init(){ $('workDate').value=todayISO(); $('timeIn').value=nowTime(); $('reportMonth').value=todayISO().slice(0,7); renderTable(); }
+function saveRecord(){
+  const rec = { id: editId || Date.now(), date:$('workDate').value, shift:$('shift').value, fullName:$('fullName').value.trim(), position:$('position').value, timeIn:$('timeIn').value, timeOut:$('timeOut').value, signature:$('signature').value.trim(), note:$('note').value.trim() };
+  if(!rec.date || !rec.fullName){ alert('กรุณากรอกวันที่ และชื่อ-สกุล'); return; }
+  let data = load();
+  if(editId){ data = data.map(r=> r.id===editId ? rec : r); editId=null; }
+  else data.push(rec);
+  store(data); clearForm(); renderTable();
+}
+function clearForm(){ ['fullName','timeOut','signature','note'].forEach(id=>$(id).value=''); $('timeIn').value=nowTime(); }
+function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; ['workDate','shift','fullName','position','timeIn','timeOut','signature','note'].forEach(id2=>$(id2).value = r[id2==='workDate'?'date':id2] || ''); window.scrollTo({top:0,behavior:'smooth'}); }
+function deleteRecord(id){ if(confirm('ต้องการลบรายการนี้ใช่หรือไม่?')){ store(load().filter(r=>r.id!==id)); renderTable(); } }
+function renderTable(){
+  const month = selectedMonth(); const [y,m]=month.split('-');
+  const rows = load().filter(r=>r.date && r.date.startsWith(month)).sort((a,b)=>(a.date+a.shift+a.position).localeCompare(b.date+b.shift+b.position));
+  $('printSub').textContent = `หน่วยงาน พิมานใจ โฮมแคร์ เดือน ${thaiMonths[Number(m)-1]} พ.ศ. ${Number(y)+543}`;
+  const tbody = $('attendanceTable').querySelector('tbody'); tbody.innerHTML='';
+  const groups = {};
+  rows.forEach(r=>{ const g=r.date+'|'+r.shift; (groups[g] ||= []).push(r); });
+  Object.keys(groups).sort().forEach(g=>{
+    const [date,shift]=g.split('|'); const arr=groups[g];
+    arr.forEach((r,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `${i===0?`<td class="shift" rowspan="${arr.length}">${thDate(date)}\n${shift}</td>`:''}<td class="left">${i+1}. ${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td class="left">${escapeHtml(r.note||'')}</td><td class="no-print"><button onclick="editRecord(${r.id})" class="small">แก้ไข</button><button onclick="deleteRecord(${r.id})" class="small btn4">ลบ</button></td>`;
+      tbody.appendChild(tr);
+    });
+  });
+  if(rows.length===0){ tbody.innerHTML='<tr><td colspan="8">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; }
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function exportCSV(){
+  const rows = [['วันที่','รอบเวร','ชื่อ - สกุล','ตำแหน่ง','เวลามา','เวลากลับ','ลงชื่อ','หมายเหตุ'], ...load().map(r=>[r.date,r.shift,r.fullName,r.position,r.timeIn,r.timeOut,r.signature,r.note])];
+  const csv = '\ufeff' + rows.map(row=>row.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='pimanjai_attendance.csv'; a.click();
+}
+function clearAll(){ if(confirm('ล้างข้อมูลทั้งหมดใช่หรือไม่?')){ localStorage.removeItem(key); renderTable(); } }
+$('reportMonth').addEventListener('change', renderTable); init();
+</script>
+</body>
+</html>
