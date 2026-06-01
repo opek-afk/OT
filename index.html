@@ -28,13 +28,19 @@
     <h2>บันทึกลงเวลา</h2>
     <div class="grid">
       <div><label>วันที่</label><input id="workDate" type="date"></div>
-      <div><label>รอบเวร</label><select id="shift"><option value="07.00-19.00น.">กลางวัน 07.00-19.00น.</option><option value="19.00-07.00น.">กลางคืน 19.00-07.00น.</option></select></div>
+      <div><label>รอบเวร</label><select id="shift"><option value="08.00-20.00">เวรDay 08.00-20.00</option><option value="20.00-08.00">เวรNight 20.00-08.00</option></select></div>
       <div><label>ชื่อ - สกุล</label><input id="fullName" placeholder="เช่น นางสาว..." /></div>
       <div><label>ตำแหน่ง</label><select id="position"><option>CM</option><option>CG</option><option>แม่บ้าน</option><option>พยาบาล</option><option>อื่น ๆ</option></select></div>
       <div><label>เวลามา</label><input id="timeIn" type="time"></div>
       <div><label>เวลากลับ</label><input id="timeOut" type="time"></div>
       <div><label>ลงชื่อ</label><input id="signature" placeholder="พิมพ์ชื่อ/ลายเซ็น" /></div>
-      <div style="grid-column:span 3"><label>หมายเหตุ</label><input id="note" placeholder="เช่น ลาป่วย/มาสาย/OT" /></div>
+      <div style="grid-column:span 2">
+        <label style="display:flex;align-items:center;gap:10px;margin:0;font-weight:700;font-size:14px">
+          <input id="onDuty" type="checkbox" style="width:auto;margin:0">
+          เฝ้าไข้คนไข้
+        </label>
+      </div>
+      <div style="grid-column:span 2"><label>หมายเหตุ</label><input id="note" placeholder="เช่น ลาป่วย/มาสาย/OT" /></div>
       <div><label>เดือนรายงาน</label><input id="reportMonth" type="month"></div>
       <div><label>&nbsp;</label><button onclick="saveRecord()" class="btn2">บันทึก</button></div>
     </div>
@@ -57,7 +63,7 @@
     </div>
     <table id="attendanceTable">
       <thead>
-        <tr><th style="width:150px">วันที่</th><th>ชื่อ - สกุล</th><th style="width:100px">ตำแหน่ง</th><th style="width:95px">เวลามา</th><th style="width:95px">เวลากลับ</th><th style="width:130px">ลงชื่อ</th><th>หมายเหตุ</th><th class="no-print" style="width:90px">จัดการ</th></tr>
+        <tr><th style="width:150px">วันที่</th><th>ชื่อ - สกุล</th><th style="width:100px">ตำแหน่ง</th><th style="width:90px">เฝ้าไข้</th><th style="width:95px">เวลามา</th><th style="width:95px">เวลากลับ</th><th style="width:130px">ลงชื่อ</th><th>หมายเหตุ</th><th class="no-print" style="width:90px">จัดการ</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -77,15 +83,15 @@ function thDate(dateStr){ const d = new Date(dateStr+'T00:00:00'); return `${d.g
 function selectedMonth(){ return $('reportMonth').value || todayISO().slice(0,7); }
 function init(){ $('workDate').value=todayISO(); $('timeIn').value=nowTime(); $('reportMonth').value=todayISO().slice(0,7); renderTable(); }
 function saveRecord(){
-  const rec = { id: editId || Date.now(), date:$('workDate').value, shift:$('shift').value, fullName:$('fullName').value.trim(), position:$('position').value, timeIn:$('timeIn').value, timeOut:$('timeOut').value, signature:$('signature').value.trim(), note:$('note').value.trim() };
+  const rec = { id: editId || Date.now(), date:$('workDate').value, shift:$('shift').value, fullName:$('fullName').value.trim(), position:$('position').value, onDuty:$('onDuty').checked, timeIn:$('timeIn').value, timeOut:$('timeOut').value, signature:$('signature').value.trim(), note:$('note').value.trim() };
   if(!rec.date || !rec.fullName){ alert('กรุณากรอกวันที่ และชื่อ-สกุล'); return; }
   let data = load();
   if(editId){ data = data.map(r=> r.id===editId ? rec : r); editId=null; }
   else data.push(rec);
   store(data); clearForm(); renderTable();
 }
-function clearForm(){ ['fullName','timeOut','signature','note'].forEach(id=>$(id).value=''); $('timeIn').value=nowTime(); }
-function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; ['workDate','shift','fullName','position','timeIn','timeOut','signature','note'].forEach(id2=>$(id2).value = r[id2==='workDate'?'date':id2] || ''); window.scrollTo({top:0,behavior:'smooth'}); }
+function clearForm(){ ['fullName','timeOut','signature','note'].forEach(id=>$(id).value=''); $('onDuty').checked=false; $('timeIn').value=nowTime(); }
+function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; ['workDate','shift','fullName','position','timeIn','timeOut','signature','note'].forEach(id2=>$(id2).value = r[id2==='workDate'?'date':id2] || ''); $('onDuty').checked = !!r.onDuty; window.scrollTo({top:0,behavior:'smooth'}); }
 function deleteRecord(id){ if(confirm('ต้องการลบรายการนี้ใช่หรือไม่?')){ store(load().filter(r=>r.id!==id)); renderTable(); } }
 function renderTable(){
   const month = selectedMonth(); const [y,m]=month.split('-');
@@ -98,15 +104,15 @@ function renderTable(){
     const [date,shift]=g.split('|'); const arr=groups[g];
     arr.forEach((r,i)=>{
       const tr=document.createElement('tr');
-      tr.innerHTML = `${i===0?`<td class="shift" rowspan="${arr.length}">${thDate(date)}\n${shift}</td>`:''}<td class="left">${i+1}. ${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td class="left">${escapeHtml(r.note||'')}</td><td class="no-print"><button onclick="editRecord(${r.id})" class="small">แก้ไข</button><button onclick="deleteRecord(${r.id})" class="small btn4">ลบ</button></td>`;
+      tr.innerHTML = `${i===0?`<td class="shift" rowspan="${arr.length}">${thDate(date)}\n${shift}</td>`:''}<td class="left">${i+1}. ${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${r.onDuty ? 'ใช่' : ''}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td class="left">${escapeHtml(r.note||'')}</td><td class="no-print"><button onclick="editRecord(${r.id})" class="small">แก้ไข</button><button onclick="deleteRecord(${r.id})" class="small btn4">ลบ</button></td>`;
       tbody.appendChild(tr);
     });
   });
-  if(rows.length===0){ tbody.innerHTML='<tr><td colspan="8">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; }
+  if(rows.length===0){ tbody.innerHTML='<tr><td colspan="9">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; }
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function exportCSV(){
-  const rows = [['วันที่','รอบเวร','ชื่อ - สกุล','ตำแหน่ง','เวลามา','เวลากลับ','ลงชื่อ','หมายเหตุ'], ...load().map(r=>[r.date,r.shift,r.fullName,r.position,r.timeIn,r.timeOut,r.signature,r.note])];
+  const rows = [['วันที่','รอบเวร','ชื่อ - สกุล','ตำแหน่ง','เฝ้าไข้','เวลามา','เวลากลับ','ลงชื่อ','หมายเหตุ'], ...load().map(r=>[r.date,r.shift,r.fullName,r.position,r.onDuty ? 'ใช่' : '',r.timeIn,r.timeOut,r.signature,r.note])];
   const csv = '\ufeff' + rows.map(row=>row.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='pimanjai_attendance.csv'; a.click();
 }
