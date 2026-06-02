@@ -111,7 +111,10 @@ function saveRecord(){
   let data = load();
   if(editId){ data = data.map(r=> r.id===editId ? rec : r); editId=null; }
   else data.push(rec);
-  store(data); clearForm(); renderTable();
+  store(data);
+  const reportMonth = rec.date.slice(0,7);
+  if($('reportMonth').value !== reportMonth){ $('reportMonth').value = reportMonth; }
+  clearForm(); renderTable();
 }
 function clearForm(){ ['fullName','timeOut','signature','note','onDutyStart','onDutyEnd'].forEach(id=>{ if($(id)) $(id).value=''; }); $('onDuty').checked=false; $('onDutyTimes').style.display='none'; $('timeIn').value=nowTime(); }
 function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; $('workDate').value = r.date || ''; $('shift').value = r.shift || $('shift').value; $('fullName').value = r.fullName || ''; $('position').value = r.position || ''; $('timeIn').value = r.timeIn || ''; $('timeOut').value = r.timeOut || ''; $('signature').value = r.signature || r.fullName || ''; $('note').value = r.note || ''; $('onDuty').checked = !!r.onDuty; if(r.onDuty){ $('onDutyTimes').style.display='flex'; $('onDutyStart').value = r.onDutyStart || ''; $('onDutyEnd').value = r.onDutyEnd || ''; } else { $('onDutyTimes').style.display='none'; $('onDutyStart').value=''; $('onDutyEnd').value=''; } window.scrollTo({top:0,behavior:'smooth'}); }
@@ -127,7 +130,11 @@ function renderTable(){
   const tbody = $('attendanceTable').querySelector('tbody');
   tbody.innerHTML='';
   const groups = {};
-  rows.forEach(r=>{ const g = `${r.date}|${r.shift}`; (groups[g] ||= []).push(r); });
+  rows.forEach(r=>{
+    const g = `${r.date}|${r.shift}`;
+    if(!groups[g]) groups[g] = [];
+    groups[g].push(r);
+  });
   Object.keys(groups).sort().forEach(g=>{
     const [date,shift] = g.split('|');
     const arr = groups[g];
