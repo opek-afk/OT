@@ -1,232 +1,52 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="th">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ระบบลงเวลาปฏิบัติงาน พิมานใจ โฮมแคร์</title>
+  <title>เข้าสู่ระบบ พิมานใจ โฮมแคร์</title>
   <style>
     :root{--accent:#2b7aef;--accent-2:#06b6d4;--dark:#0f172a;--line:#cbd5e9;--bg:#f0f7ff;--card:#ffffff;--danger:#dc2626}
     *{box-sizing:border-box} body{margin:0;font-family:"Sarabun","Tahoma",sans-serif;background:var(--bg);color:var(--dark)}
-    header{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;padding:18px 24px;border-bottom:1px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:2}
-    h1{margin:0;text-align:center;font-size:26px}.sub{text-align:center;font-size:18px;margin-top:6px}
-    .wrap{max-width:1180px;margin:20px auto;padding:0 14px}.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 8px 24px #00000012;margin-bottom:16px}
-    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px} label{font-weight:700;font-size:14px} input,select,textarea,button{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;font-size:15px}
-    button{cursor:pointer;background:var(--accent);color:white;border:0;font-weight:700}.btn2{background:var(--accent-2)}.btn3{background:#475569}.btn4{background:var(--danger)}.btn5{background:#6d28d9}
-    table{width:100%;border-collapse:collapse;background:white} th,td{border:1.4px solid var(--line);padding:7px;text-align:center;vertical-align:middle} th{background:#f3f4f6}.left{text-align:left}.shift{background:var(--accent-2);font-weight:700;color:white;white-space:pre-line}.small{font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{width:auto;padding:9px 14px}
-    .signature{font-family:"Brush Script MT",cursive;font-size:20px}.hide{display:none}
-    @media(max-width:900px){.grid{grid-template-columns:1fr 1fr} table{font-size:13px}.wrap{padding:0 6px}}
-    @media print{body{background:white} header,.no-print,.card.form{display:none}.wrap{max-width:none;margin:0}.card{box-shadow:none;border-radius:0;padding:0} th,td{padding:6px} .print-title{display:block!important;text-align:center;margin-bottom:10px} }
+    header{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;padding:18px 24px;border-bottom:1px solid rgba(0,0,0,0.06);text-align:center}
+    h1{margin:0;font-size:28px} .sub{margin-top:6px;font-size:16px}
+    .wrap{max-width:520px;margin:32px auto;padding:0 14px}.card{background:var(--card);border-radius:20px;padding:24px;box-shadow:0 9px 30px rgba(0,0,0,.08)}
+    label{display:block;margin-bottom:8px;font-weight:700;font-size:14px} input,button{width:100%;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-size:15px}
+    input{margin-bottom:16px} button{cursor:pointer;background:var(--accent-2);color:white;border:0;font-weight:700}
+    .link{display:block;margin-top:14px;text-align:center;color:var(--accent);text-decoration:none;font-weight:700}
+    .message{padding:12px 14px;border-radius:12px;margin-bottom:14px;background:#e0f2fe;color:#0369a1;display:none}
+    .message.error{background:#fee2e2;color:#b91c1c}
   </style>
 </head>
 <body>
 <header>
-  <h1>พิมานใจ โฮมแคร์</h1>
-  <div class="sub">ระบบลงเวลาปฏิบัติงานศูนย์ดูแลผู้สูงอายุ</div>
+  <h1>เข้าสู่ระบบ</h1>
+  <div class="sub">ระบบลงเวลาปฏิบัติงาน พิมานใจ โฮมแคร์</div>
 </header>
 <div class="wrap">
-  <div class="card form no-print">
-    <h2>บันทึกลงเวลา</h2>
-    <div class="grid">
-      <div><label>วันที่</label><input id="workDate" type="date"></div>
-      <div><label>รอบเวร</label><select id="shift"><option value="08:00-20:00">เวร Day 08:00-20:00</option><option value="20:00-08:00">เวร Night 20:00-08:00</option></select></div>
-          <div><label>ชื่อ - สกุล</label><select id="fullName"><option value="" disabled selected hidden>เลือกชื่อ</option><option value="คุณนัธทวัฒน์  อุราแก้ว">1. คุณนัธทวัฒน์  อุราแก้ว</option><option value="คุณวิลาวัลย์     พรมดอนกลอย">2. คุณวิลาวัลย์     พรมดอนกลอย</option><option value="คุณนันทพล    สิงห์ประเสริฐ">3. คุณนันทพล    สิงห์ประเสริฐ</option><option value="คุณปุณญิสา   ศรีสาร">4. คุณปุณญิสา   ศรีสาร</option><option value="พญ.มนัญญา ภิรมย์">5. พญ.มนัญญา ภิรมย์</option><option value="คุณสุรนันท์ กลิ่นศรีสุข">6. คุณสุรนันท์ กลิ่นศรีสุข</option><option value="คุณนภาวิไล  ดาวตรง">7. คุณนภาวิไล  ดาวตรง</option><option value="คุณจรีพร  ลาวงค์">8. คุณจรีพร  ลาวงค์</option><option value="คุณสุพัฒตรา  แสงบุตร">9. คุณสุพัฒตรา  แสงบุตร</option><option value="คุณนางสาวพิกุล คำงาม">10. คุณนางสาวพิกุล คำงาม</option><option value="คุณศิริรัตน์ ไชยศรีทา">11. คุณศิริรัตน์ ไชยศรีทา</option><option value="คุณนาง ทองคำ รมมนตรี">12. คุณนาง ทองคำ รมมนตรี</option><option value="คุณญาณิน สาแก้ว">13. คุณญาณิน สาแก้ว</option><option value="คุณจันทร์เพ็ญ เสียงไพรพันธ์">14. คุณจันทร์เพ็ญ เสียงไพรพันธ์</option></select></div>
-      <div><label>ตำแหน่ง</label><select id="position"><option>CM</option><option>CG</option><option>แม่บ้าน</option><option>พยาบาล</option><option>นักกายภาพ</option><option>แพทย์</option><option>อื่น ๆ</option></select></div>
-      <div><label>เวลามา</label><input id="timeIn" type="time"></div>
-      <div><label>เวลากลับ</label><input id="timeOut" type="time"></div>
-      <div><label>ลงชื่อ</label><input id="signature" placeholder="พิมพ์ชื่อ/ลายเซ็น" /></div>
-      <div style="grid-column:span 2">
-        <label style="display:flex;align-items:center;gap:10px;margin:0;font-weight:700;font-size:14px">
-          <input id="onDuty" type="checkbox" style="width:auto;margin:0">
-          เฝ้าไข้คนไข้
-        </label>
-        <div id="onDutyTimes" style="margin-top:8px;display:none;gap:8px;align-items:center">
-          <label class="small left" style="width:110px;margin:0;font-weight:600">เวลาเริ่ม</label>
-          <input id="onDutyStart" type="time" style="width:150px;margin-right:8px">
-          <label class="small left" style="width:80px;margin:0;font-weight:600">เวลาสิ้นสุด</label>
-          <input id="onDutyEnd" type="time" style="width:150px">
-        </div>
-      </div>
-      <div style="grid-column:span 2"><label>หมายเหตุ</label><input id="note" placeholder="เช่น ลาป่วย/มาสาย/OT" /></div>
-      <div><label>เดือนรายงาน</label><input id="reportMonth" type="month"></div>
-      <div><label>&nbsp;</label><button onclick="saveRecord()" class="btn2">บันทึก</button></div>
-    </div>
-    <p class="small">ข้อมูลถูกเก็บในเครื่องนี้ผ่าน LocalStorage สามารถส่งออก CSV และพิมพ์เป็นสมุดลงเวลาได้</p>
-  </div>
-
-  <div class="card no-print">
-    <div class="actions">
-      <button onclick="renderTable()">รีเฟรช</button>
-      <button onclick="toggleAllSelection()" class="btn3">เลือกทั้งหมด</button>
-      <button onclick="exportCSV()" class="btn5">ส่งออก Excel/CSV</button>
-      <button onclick="printSelectedRows()" class="btn3">PDF</button>
-      <button onclick="clearAll()" class="btn4">ล้างข้อมูลทั้งหมด</button>
-      <span id="selectedCount" class="small" style="align-self:center;margin-left:auto">เลือก 0 รายการ</span>
-    </div>
-  </div>
-
   <div class="card">
-    <div class="print-title hide">
-      <h2>สมุดปฏิบัติงาน</h2>
-      <h3 id="printSub">หน่วยงาน พิมานใจ โฮมแคร์</h3>
-    </div>
-    <table id="attendanceTable">
-      <thead>
-        <tr><th class="no-print" style="width:60px">เลือกรายการ</th><th style="width:150px">วันที่</th><th>ชื่อ - สกุล</th><th style="width:100px">ตำแหน่ง</th><th style="width:90px">เฝ้าไข้</th><th style="width:95px">เวลามา</th><th style="width:95px">เวลากลับ</th><th style="width:130px">ลงชื่อ</th><th>หมายเหตุ</th><th class="no-print" style="width:90px">จัดการ</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="message" class="message"></div>
+    <label>ชื่อผู้ใช้</label>
+    <input id="username" placeholder="username" />
+    <label>รหัสผ่าน</label>
+    <input id="password" type="password" placeholder="password" />
+    <button onclick="loginUser()">เข้าสู่ระบบ</button>
+    <a class="link" href="register.html">สมัครสมาชิก</a>
   </div>
 </div>
 <script>
 const $ = id => document.getElementById(id);
-let editId = null;
-
-function escapeHtml(text) {
-  if (!text) return '';
-  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-  return text.toString().replace(/[&<>"']/g, m => map[m]);
-}
-
-const key = 'pimanjai_attendance_v1';
-const selectedRows = new Set();
-let selectionInitialized = false;
-const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-function todayISO(){ return new Date().toISOString().slice(0,10); }
-function nowTime(){ return new Date().toTimeString().slice(0,5); }
-function load(){ return JSON.parse(localStorage.getItem(key) || '[]'); }
-function store(data){ localStorage.setItem(key, JSON.stringify(data)); }
-function beYear(dateStr){ return new Date(dateStr).getFullYear() + 543; }
-function thDate(dateStr){ const d = new Date(dateStr+'T00:00:00'); return `${d.getDate()}/${thaiMonths[d.getMonth()].slice(0,3)}./${d.getFullYear()+543}`; }
-function selectedMonth(){ return $('reportMonth').value || todayISO().slice(0,7); }
-function init(){ $('workDate').value=todayISO(); $('timeIn').value=nowTime(); $('reportMonth').value=todayISO().slice(0,7); renderTable(); }
-function setReportMonthFromDate(dateValue){ if(dateValue){ $('reportMonth').value = dateValue.slice(0,7); } }
-function saveRecord(){
-  const rec = {
-    id: editId || Date.now(),
-    date:$('workDate').value,
-    shift:$('shift').value,
-    fullName:$('fullName').value.trim(),
-    position:$('position').value,
-    onDuty:$('onDuty').checked,
-    onDutyStart:$('onDutyStart') ? $('onDutyStart').value : '',
-    onDutyEnd:$('onDutyEnd') ? $('onDutyEnd').value : '',
-    timeIn:$('timeIn').value,
-    timeOut:$('timeOut').value,
-    signature:$('signature').value.trim(),
-    note:$('note').value.trim()
-  };
-  if(!rec.date || !rec.fullName){ alert('กรุณากรอกวันที่ และชื่อ-สกุล'); return; }
-  let data = load();
-  if(editId){ data = data.map(r=> r.id===editId ? rec : r); editId=null; }
-  else data.push(rec);
-  store(data);
-  setReportMonthFromDate(rec.date);
-  clearForm(); renderTable();
-  const table = $('attendanceTable');
-  if(table){ table.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-}
-
-function clearForm(){ ['fullName','timeOut','signature','note','onDutyStart','onDutyEnd'].forEach(id=>{ if($(id)) $(id).value=''; }); $('onDuty').checked=false; $('onDutyTimes').style.display='none'; $('timeIn').value=nowTime(); }
-function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; $('workDate').value = r.date || ''; setReportMonthFromDate(r.date || $('workDate').value); $('shift').value = r.shift || $('shift').value; $('fullName').value = r.fullName || ''; $('position').value = r.position || ''; $('timeIn').value = r.timeIn || ''; $('timeOut').value = r.timeOut || ''; $('signature').value = r.signature || r.fullName || ''; $('note').value = r.note || ''; $('onDuty').checked = !!r.onDuty; if(r.onDuty){ $('onDutyTimes').style.display='flex'; $('onDutyStart').value = r.onDutyStart || ''; $('onDutyEnd').value = r.onDutyEnd || ''; } else { $('onDutyTimes').style.display='none'; $('onDutyStart').value=''; $('onDutyEnd').value=''; } window.scrollTo({top:0,behavior:'smooth'}); }
-function deleteRecord(id){ if(confirm('ต้องการลบรายการนี้ใช่หรือไม่?')){ store(load().filter(r=>r.id!==id)); renderTable(); } }
-function renderTable(){
-  const month = selectedMonth();
-  const [y,m] = month.split('-');
-  const rows = load().filter(r=>r.date && r.date.startsWith(month)).sort((a,b)=>(a.date+a.shift+a.position).localeCompare(b.date+b.shift+b.position));
-  if(!selectionInitialized){ rows.forEach(r=>selectedRows.add(r.id)); selectionInitialized = true; }
-  const currentIds = new Set(rows.map(r=>r.id));
-  selectedRows.forEach(id=>{ if(!currentIds.has(id)) selectedRows.delete(id); });
-  $('printSub').textContent = `หน่วยงาน พิมานใจ โฮมแคร์ เดือน ${thaiMonths[Number(m)-1]} พ.ศ. ${Number(y)+543}`;
-  const tbody = $('attendanceTable').querySelector('tbody');
-  tbody.innerHTML='';
-  const groups = {};
-  rows.forEach(r=>{
-    const g = `${r.date}|${r.shift}`;
-    if(!groups[g]) groups[g] = [];
-    groups[g].push(r);
-  });
-  Object.keys(groups).sort().forEach(g=>{
-    const [date,shift] = g.split('|');
-    const arr = groups[g];
-    arr.forEach((r,i)=>{
-      const dutyText = r.onDuty ? `ใช่${(r.onDutyStart||r.onDutyEnd) ? ` (${r.onDutyStart||''}-${r.onDutyEnd||''})` : ''}` : '';
-      const isChecked = selectedRows.has(r.id) ? 'checked' : '';
-      const tr = document.createElement('tr');
-      tr.dataset.id = r.id;
-      tr.innerHTML = `<td class="no-print"><input type="checkbox" ${isChecked} onchange="toggleRowSelection(${r.id})"></td>${i===0?`<td class="shift" rowspan="${arr.length}">${thDate(date)}\n${shift}</td>`:''}<td class="left">${i+1}. ${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${dutyText}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td class="left">${escapeHtml(r.note||'')}</td><td class="no-print"><button onclick="editRecord(${r.id})" class="small">แก้ไข</button><button onclick="deleteRecord(${r.id})" class="small btn4">ลบ</button></td>`;
-      tbody.appendChild(tr);
-    });
-  });
-  if(rows.length===0){ tbody.innerHTML='<tr><td colspan="10">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; }
-  updateSelectedCount(rows.length);
-}
-
-function updateSelectedCount(total){ 
-  const count = selectedRows.size; 
-  if($('selectedCount')) $('selectedCount').textContent = `เลือก ${count} รายการ จาก ${total}`; 
-}
-
-function toggleRowSelection(id){ if(selectedRows.has(id)){ selectedRows.delete(id); } else { selectedRows.add(id); } updateSelectedCount(document.querySelectorAll('#attendanceTable tbody tr').length); }
-
-function toggleAllSelection(){ const rows = load().filter(r=>r.date && r.date.startsWith(selectedMonth())); const allSelected = rows.length > 0 && rows.every(r=>selectedRows.has(r.id)); if(allSelected){ rows.forEach(r=>selectedRows.delete(r.id)); } else { rows.forEach(r=>selectedRows.add(r.id)); } renderTable(); }
-
-function getSelectedExportRows(){
-  return load().filter(r=>r.date && r.date.startsWith(selectedMonth()))
-    .sort((a,b)=>(a.date+a.shift+a.position).localeCompare(b.date+b.shift+b.position))
-    .filter(r=>selectedRows.has(r.id));
-}
-
-function printSelectedRows(){
-  const rows = getSelectedExportRows();
-  if(rows.length===0){ return alert('โปรดเลือกผู้ที่ต้องการสรุปก่อนพิมพ์'); }
-  const month = selectedMonth();
-  const [y,m] = month.split('-');
-  const title = `หน่วยงาน พิมานใจ โฮมแคร์ เดือน ${thaiMonths[Number(m)-1]} พ.ศ. ${Number(y)+543}`;
-  const rowHtml = rows.map(r=>{
-    const dutyText = r.onDuty ? `ใช่${(r.onDutyStart||r.onDutyEnd) ? ` (${r.onDutyStart||''}-${r.onDutyEnd||''})` : ''}` : '';
-    return `<tr><td>${thDate(r.date)}<br>${r.shift}</td><td>${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${dutyText}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td>${escapeHtml(r.note||'')}</td></tr>`;
-  }).join('');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>PDF</title><style>body{font-family:'Sarabun','Tahoma',sans-serif;padding:20px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e9;padding:8px;text-align:left;font-size:14px}th{background:#eef2ff}.signature{font-family:'Brush Script MT',cursive;font-size:18px}</style></head><body><h2 style="text-align:center">สมุดปฏิบัติงาน</h2><p style="text-align:center">${title}</p><table><thead><tr><th>วันที่/เวร</th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>เฝ้าไข้</th><th>เวลามา</th><th>เวลากลับ</th><th>ลงชื่อ</th><th>หมายเหตุ</th></tr></thead><tbody>${rowHtml}</tbody></table></body></html>`;
-  const win = window.open('', '_blank');
-  if(!win) return alert('ไม่สามารถเปิดหน้าต่างพิมพ์ได้ โปรดลองอีกครั้ง');
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.print();
-}
-
-function exportCSV(){
-  const rows = [['วันที่','รอบเวร','ชื่อ - สกุล','ตำแหน่ง','เฝ้าไข้','เวลามา','เวลากลับ','ลงชื่อ','หมายเหตุ'], ...getSelectedExportRows().map(r=>[r.date,r.shift,r.fullName,r.position,r.onDuty ? `ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})` : '',r.timeIn,r.timeOut,r.signature,r.note])];
-  if(rows.length <= 1){ return alert('โปรดเลือกผู้ที่ต้องการส่งออกก่อน'); }
-  const csv = '\ufeff' + rows.map(row=>row.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
-  a.download = 'pimanjai_attendance.csv';
-  a.click();
-}
-
-function clearAll(){ if(confirm('ล้างข้อมูลทั้งหมดใช่หรือไม่?')){ localStorage.removeItem(key); renderTable(); } }
-
-function applyShiftTimes(shift){ if(!shift) return; const parts=shift.split('-'); if(parts.length===2){ const s=parts[0]; const e=parts[1]; if($('timeIn')) $('timeIn').value = s; if($('timeOut')) $('timeOut').value = e; } }
-
-$('shift').addEventListener('change', ()=>{ applyShiftTimes($('shift').value); });
-$('onDuty').addEventListener('change', ()=>{
-  const show = $('onDuty').checked;
-  $('onDutyTimes').style.display = show ? 'flex' : 'none';
-  if(show){
-    $('onDutyStart').value = $('onDutyStart').value || $('timeIn').value || $('shift').value.split('-')[0] || '';
-    $('onDutyEnd').value = $('onDutyEnd').value || $('timeOut').value || $('shift').value.split('-')[1] || '';
-  }
-});
-
-$('reportMonth').addEventListener('change', () => {
-  selectionInitialized = false;
-  renderTable();
-});
-$('workDate').addEventListener('change', ()=>{
-  setReportMonthFromDate($('workDate').value);
-});
-init();
+const usersKey = 'pimanjai_users';
+const currentUserKey = 'pimanjai_current_user';
+const logsKey = 'pimanjai_user_logs';
+function loadUsers(){ return JSON.parse(localStorage.getItem(usersKey) || '[]'); }
+function storeUsers(users){ localStorage.setItem(usersKey, JSON.stringify(users)); }
+function loadLogs(){ return JSON.parse(localStorage.getItem(logsKey) || '[]'); }
+function storeLogs(logs){ localStorage.setItem(logsKey, JSON.stringify(logs)); }
+function ensureDefaultAdmin(){ const users = loadUsers(); if(!users.find(u=>u.username==='admin')){ users.push({ fullName:'Admin', username:'admin', password:'admin123', role:'admin' }); storeUsers(users); }}
+function showMessage(text, isError=false){ const msg=$('message'); msg.textContent=text; msg.className='message' + (isError?' error':''); msg.style.display='block'; }
+function addLog(username, role, action){ const logs = loadLogs(); logs.unshift({ id: Date.now(), username, role, action, time: new Date().toISOString() }); storeLogs(logs); }
+function loginUser(){ const username=$('username').value.trim(); const password=$('password').value; if(!username || !password){ showMessage('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', true); return; } const users=loadUsers(); const user=users.find(u=>u.username===username && u.password===password); if(!user){ showMessage('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', true); return; } sessionStorage.setItem(currentUserKey, JSON.stringify(user)); addLog(user.username, user.role, 'login'); showMessage('เข้าสู่ระบบสำเร็จ กำลังไปหน้าต่อไป...'); setTimeout(()=>{ location.href = user.role==='admin' ? 'admin.html' : 'app.html'; }, 800); }
+window.addEventListener('load', ()=>{ ensureDefaultAdmin(); const current = sessionStorage.getItem(currentUserKey); if(current){ const user = JSON.parse(current); location.href = user.role==='admin' ? 'admin.html' : 'app.html'; }});
 </script>
 </body>
 </html>
