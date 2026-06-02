@@ -122,6 +122,8 @@ function saveRecord(){
   store(data);
   setReportMonthFromDate(rec.date);
   clearForm(); renderTable();
+  const table = $('attendanceTable');
+  if(table){ table.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 }
 
 function clearForm(){ ['fullName','timeOut','signature','note','onDutyStart','onDutyEnd'].forEach(id=>{ if($(id)) $(id).value=''; }); $('onDuty').checked=false; $('onDutyTimes').style.display='none'; $('timeIn').value=nowTime(); }
