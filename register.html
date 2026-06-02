@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>สมัครสมาชิก พิมานใจ โฮมแคร์</title>
+  <style>
+    :root{--accent:#2b7aef;--accent-2:#06b6d4;--dark:#0f172a;--line:#cbd5e9;--bg:#f0f7ff;--card:#ffffff;--danger:#dc2626}
+    *{box-sizing:border-box} body{margin:0;font-family:"Sarabun","Tahoma",sans-serif;background:var(--bg);color:var(--dark)}
+    header{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;padding:18px 24px;border-bottom:1px solid rgba(0,0,0,0.06);text-align:center}
+    h1{margin:0;font-size:28px} .sub{margin-top:6px;font-size:16px}
+    .wrap{max-width:540px;margin:32px auto;padding:0 14px}.card{background:var(--card);border-radius:20px;padding:24px;box-shadow:0 9px 30px rgba(0,0,0,.08)}
+    label{display:block;margin-bottom:6px;font-weight:700;font-size:14px} input,button{width:100%;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-size:15px}
+    input{margin-bottom:14px} button{cursor:pointer;background:var(--accent-2);color:white;border:0;font-weight:700}
+    .link{display:block;margin-top:12px;text-align:center;color:var(--accent);text-decoration:none;font-weight:700}
+    .message{padding:12px 14px;border-radius:12px;margin-bottom:14px;background:#e0f2fe;color:#0369a1;display:none}
+    .message.error{background:#fee2e2;color:#b91c1c}
+  </style>
+</head>
+<body>
+<header>
+  <h1>สมัครสมาชิก</h1>
+  <div class="sub">ระบบลงเวลาปฏิบัติงาน พิมานใจ โฮมแคร์</div>
+</header>
+<div class="wrap">
+  <div class="card">
+    <div id="message" class="message"></div>
+    <label>ชื่อ - สกุล</label>
+    <input id="fullName" placeholder="เช่น คุณสมชาย ใจดี" />
+    <label>ชื่อผู้ใช้ (username)</label>
+    <input id="username" placeholder="เช่น somchai" />
+    <label>รหัสผ่าน</label>
+    <input id="password" type="password" placeholder="รหัสผ่าน" />
+    <label>ยืนยันรหัสผ่าน</label>
+    <input id="confirmPassword" type="password" placeholder="ยืนยันรหัสผ่าน" />
+    <button onclick="registerUser()">สมัครสมาชิก</button>
+    <a class="link" href="index.html">กลับไปหน้าเข้าสู่ระบบ</a>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const usersKey = 'pimanjai_users';
+function loadUsers(){ return JSON.parse(localStorage.getItem(usersKey) || '[]'); }
+function storeUsers(users){ localStorage.setItem(usersKey, JSON.stringify(users)); }
+function showMessage(text, isError=false){ const msg = $('message'); msg.textContent = text; msg.className = 'message' + (isError ? ' error' : ''); msg.style.display = 'block'; }
+function ensureDefaultAdmin(){ const users = loadUsers(); if(!users.find(u=>u.username==='admin')){ users.push({ fullName:'Admin', username:'admin', password:'admin123', role:'admin' }); storeUsers(users); }}
+function registerUser(){ const fullName = $('fullName').value.trim(); const username = $('username').value.trim(); const password = $('password').value; const confirmPassword = $('confirmPassword').value;
+  if(!fullName || !username || !password || !confirmPassword){ showMessage('กรุณากรอกข้อมูลให้ครบทุกช่อง', true); return; }
+  if(password !== confirmPassword){ showMessage('รหัสผ่านไม่ตรงกัน', true); return; }
+  const users = loadUsers(); if(users.find(u=>u.username===username)){ showMessage('มีชื่อผู้ใช้นี้แล้ว กรุณาใช้อันอื่น', true); return; }
+  users.push({ fullName, username, password, role:'user' }); storeUsers(users); showMessage('สมัครสมาชิกสำเร็จ! กำลังพาไปหน้าล็อกอิน...', false); setTimeout(()=> location.href='index.html', 1200); }
+window.addEventListener('load', ()=>{ ensureDefaultAdmin(); });
+</script>
+</body>
+</html>

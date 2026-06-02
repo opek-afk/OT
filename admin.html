@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard พิมานใจ</title>
+  <style>
+    :root{--accent:#2b7aef;--accent-2:#06b6d4;--dark:#0f172a;--line:#cbd5e9;--bg:#f0f7ff;--card:#ffffff;--danger:#dc2626}
+    *{box-sizing:border-box} body{margin:0;font-family:"Sarabun","Tahoma",sans-serif;background:var(--bg);color:var(--dark)}
+    header{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;padding:18px 24px;border-bottom:1px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:2}
+    h1{margin:0;font-size:26px} .sub{text-align:center;font-size:16px;margin-top:6px}
+    .wrap{max-width:1180px;margin:20px auto;padding:0 14px}.card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.08);margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px} label{font-weight:700;font-size:14px} input,select,button,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-size:15px}
+    button{cursor:pointer;background:var(--accent);color:white;border:0;font-weight:700}.btn2{background:var(--accent-2)}.btn3{background:#475569}.btn4{background:var(--danger)}.btn5{background:#6d28d9}
+    table{width:100%;border-collapse:collapse;background:white} th,td{border:1.4px solid var(--line);padding:8px;text-align:center;vertical-align:middle} th{background:#f3f4f6}.left{text-align:left}.small{font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{width:auto;padding:10px 14px}
+    .message{padding:12px 14px;border-radius:12px;background:#e0f2fe;color:#0369a1;margin-bottom:14px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr 1fr} table{font-size:13px}.wrap{padding:0 6px}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Admin Dashboard</h1>
+  <div class="sub" id="adminGreeting">ผู้ดูแลระบบ</div>
+</header>
+<div class="wrap">
+  <div class="card">
+    <div class="message" id="adminMessage" style="display:none"></div>
+    <div class="actions"><button onclick="renderAttendanceTable()">รีเฟรชข้อมูล</button><button onclick="renderLogTable()" class="btn2">รีเฟรชล็อก</button><button onclick="logout()" class="btn4">ออกจากระบบ</button></div>
+  </div>
+  <div class="card">
+    <h2>จัดการข้อมูลเวลาทำงาน</h2>
+    <div class="grid">
+      <div><label>ผู้ใช้</label><select id="recordUser"></select></div>
+      <div><label>วันที่</label><input id="recDate" type="date"></div>
+      <div><label>รอบเวร</label><select id="recShift"><option value="08:00-20:00">เวร Day 08:00-20:00</option><option value="20:00-08:00">เวร Night 20:00-08:00</option></select></div>
+      <div><label>ตำแหน่ง</label><select id="recPosition"><option>CM</option><option>CG</option><option>แม่บ้าน</option><option>พยาบาล</option><option>นักกายภาพ</option><option>แพทย์</option><option>อื่น ๆ</option></select></div>
+      <div><label>เวลามา</label><input id="recTimeIn" type="time"></div>
+      <div><label>เวลากลับ</label><input id="recTimeOut" type="time"></div>
+      <div><label>ลงชื่อ</label><input id="recSignature" /></div>
+      <div style="grid-column:span 2">
+        <label style="display:flex;align-items:center;gap:10px;margin:0;font-weight:700;font-size:14px"><input id="recOnDuty" type="checkbox" style="width:auto;margin:0"> เฝ้าไข้คนไข้</label>
+        <div id="recOnDutyTimes" style="margin-top:8px;display:none;gap:8px;align-items:center">
+          <label class="small left" style="width:110px;margin:0;font-weight:600">เวลาเริ่ม</label><input id="recOnDutyStart" type="time" style="width:150px;margin-right:8px">
+          <label class="small left" style="width:80px;margin:0;font-weight:600">เวลาสิ้นสุด</label><input id="recOnDutyEnd" type="time" style="width:150px">
+        </div>
+      </div>
+      <div style="grid-column:span 2"><label>หมายเหตุ</label><input id="recNote" /></div>
+      <div><label>เดือนรายงาน</label><input id="recReportMonth" type="month"></div>
+      <div><label>&nbsp;</label><button onclick="saveAdminRecord()" class="btn5">บันทึก / แก้ไข</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>ตารางเวลาทั้งหมด</h2>
+    <table id="adminTable"><thead><tr><th>วันที่</th><th>ผู้ใช้</th><th>ชื่อ - สกุล</th><th>เวร</th><th>ตำแหน่ง</th><th>เฝ้าไข้</th><th>เวลามา</th><th>เวลากลับ</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="card">
+    <h2>ล็อกการเข้าใช้งาน</h2>
+    <table id="adminLogTable"><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>บทบาท</th><th>การกระทำ</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const currentUserKey = 'pimanjai_current_user';
+const usersKey = 'pimanjai_users';
+const attendanceKey = 'pimanjai_attendance';
+const logsKey = 'pimanjai_user_logs';
+let editId = null;
+function loadCurrentUser(){ try{ return JSON.parse(sessionStorage.getItem(currentUserKey)); }catch(e){ return null; }}
+function loadUsers(){ return JSON.parse(localStorage.getItem(usersKey) || '[]'); }
+function loadData(){ return JSON.parse(localStorage.getItem(attendanceKey) || '[]'); }
+function storeData(data){ localStorage.setItem(attendanceKey, JSON.stringify(data)); }
+function loadLogs(){ return JSON.parse(localStorage.getItem(logsKey) || '[]'); }
+function storeLogs(logs){ localStorage.setItem(logsKey, JSON.stringify(logs)); }
+function addLog(action){ const user = loadCurrentUser(); if(!user) return; const logs = loadLogs(); logs.unshift({ id: Date.now(), username:user.username, fullName:user.fullName, role:user.role, action, time:new Date().toISOString() }); storeLogs(logs); }
+function showMessage(text, isError=false){ const msg=$('adminMessage'); msg.textContent=text; msg.style.display='block'; msg.style.background=isError?'#fee2e2':'#e0f2fe'; msg.style.color=isError?'#b91c1c':'#0369a1'; setTimeout(()=>msg.style.display='none',3000); }
+function checkAdmin(){ const user=loadCurrentUser(); if(!user){ location.href='index.html'; return false; } if(user.role !== 'admin'){ location.href='app.html'; return false; } $('adminGreeting').textContent=`ผู้ดูแลระบบ: ${user.fullName}`; return true; }
+function init(){ if(!checkAdmin()) return; populateUsers(); renderAttendanceTable(); renderLogTable(); }
+function populateUsers(){ const users = loadUsers(); const select=$('recordUser'); select.innerHTML=''; users.forEach(u=>{ if(u.role !== 'admin') select.insertAdjacentHTML('beforeend', `<option value="${u.username}" data-fullname="${u.fullName}">${u.fullName} (${u.username})</option>`); }); }
+function saveAdminRecord(){ const username = $('recordUser').value; const user = loadUsers().find(u=>u.username===username); if(!user){ showMessage('เลือกผู้ใช้ก่อนบันทึก', true); return; } const rec = { id: editId || Date.now(), userId: user.username, fullName:user.fullName, username:user.username, date:$('recDate').value, shift:$('recShift').value, position:$('recPosition').value, onDuty:$('recOnDuty').checked, onDutyStart:$('recOnDutyStart').value, onDutyEnd:$('recOnDutyEnd').value, timeIn:$('recTimeIn').value, timeOut:$('recTimeOut').value, signature:$('recSignature').value.trim(), note:$('recNote').value.trim(), reportMonth:$('recReportMonth').value || $('recDate').value.slice(0,7) };
+  if(!rec.date){ showMessage('กรุณาเลือกวันที่', true); return; }
+  const data = loadData(); if(editId){ storeData(data.map(item=> item.id===editId ? rec : item)); showMessage('อัปเดตข้อมูลเรียบร้อย'); } else { data.push(rec); storeData(data); showMessage('เพิ่มข้อมูลเรียบร้อย'); }
+  editId = null; renderAttendanceTable(); }
+function renderAttendanceTable(){ const rows = loadData().sort((a,b)=> (b.date+a.shift).localeCompare(a.date+b.shift)); const tbody=$('adminTable').querySelector('tbody'); tbody.innerHTML=''; rows.forEach(r=>{ const dutyText=r.onDuty?`ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})`:''; tbody.insertAdjacentHTML('beforeend', `<tr><td>${r.date}</td><td>${r.username}</td><td class="left">${r.fullName}</td><td>${r.shift}</td><td>${r.position}</td><td>${dutyText}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="left">${r.note||''}</td><td><button onclick="editAdminRecord(${r.id})" class="small btn2">แก้ไข</button> <button onclick="deleteAdminRecord(${r.id})" class="small btn4">ลบ</button></td></tr>`); }); if(rows.length===0){ tbody.innerHTML='<tr><td colspan="10">ยังไม่มีข้อมูล</td></tr>'; } }
+function editAdminRecord(id){ const item = loadData().find(r=>r.id===id); if(!item) return; editId = id; $('recordUser').value = item.userId; $('recDate').value = item.date; $('recShift').value = item.shift; $('recPosition').value = item.position; $('recTimeIn').value = item.timeIn; $('recTimeOut').value = item.timeOut; $('recSignature').value = item.signature; $('recNote').value = item.note; $('recReportMonth').value = item.reportMonth; $('recOnDuty').checked = !!item.onDuty; $('recOnDutyTimes').style.display = item.onDuty ? 'flex' : 'none'; $('recOnDutyStart').value = item.onDutyStart; $('recOnDutyEnd').value = item.onDutyEnd; window.scrollTo({top:$('recordUser').offsetTop-20,behavior:'smooth'}); }
+function deleteAdminRecord(id){ if(!confirm('ต้องการลบรายการนี้หรือไม่?')) return; storeData(loadData().filter(r=>r.id!==id)); renderAttendanceTable(); showMessage('ลบข้อมูลเรียบร้อย'); }
+function renderLogTable(){ const logs = loadLogs().sort((a,b)=> b.time.localeCompare(a.time)); const tbody=$('adminLogTable').querySelector('tbody'); tbody.innerHTML=''; logs.forEach(log=>{ tbody.insertAdjacentHTML('beforeend', `<tr><td>${new Date(log.time).toLocaleString('th-TH')}</td><td>${log.fullName} (${log.username})</td><td>${log.role}</td><td>${log.action}</td></tr>`); }); if(logs.length===0){ tbody.innerHTML='<tr><td colspan="4">ยังไม่มีล็อก</td></tr>'; } }
+$('recOnDuty').addEventListener('change', ()=>{ $('recOnDutyTimes').style.display = $('recOnDuty').checked ? 'flex' : 'none'; });
+function logout(){ addLog('logout'); sessionStorage.removeItem(currentUserKey); location.href='index.html'; }
+init();
+</script>
+</body>
+</html>

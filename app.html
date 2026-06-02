@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ลงเวลาทำงาน พิมานใจ โฮมแคร์</title>
+  <style>
+    :root{--accent:#2b7aef;--accent-2:#06b6d4;--dark:#0f172a;--line:#cbd5e9;--bg:#f0f7ff;--card:#ffffff;--danger:#dc2626}
+    *{box-sizing:border-box} body{margin:0;font-family:"Sarabun","Tahoma",sans-serif;background:var(--bg);color:var(--dark)}
+    header{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;padding:18px 24px;border-bottom:1px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:2}
+    h1{margin:0;font-size:26px} .sub{text-align:center;font-size:16px;margin-top:6px}
+    .wrap{max-width:1180px;margin:20px auto;padding:0 14px}.card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.08);margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px} label{font-weight:700;font-size:14px} input,select,button,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-size:15px}
+    button{cursor:pointer;background:var(--accent);color:white;border:0;font-weight:700}.btn2{background:var(--accent-2)}.btn3{background:#475569}.btn4{background:var(--danger)}.btn5{background:#6d28d9}
+    table{width:100%;border-collapse:collapse;background:white} th,td{border:1.4px solid var(--line);padding:8px;text-align:center;vertical-align:middle} th{background:#f3f4f6}.left{text-align:left}.shift{background:var(--accent-2);font-weight:700;color:white;white-space:pre-line}.small{font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{width:auto;padding:10px 14px}
+    .signature{font-family:"Brush Script MT",cursive;font-size:18px}.hide{display:none}.message{padding:12px 14px;border-radius:12px;background:#e0f2fe;color:#0369a1;margin-bottom:14px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr 1fr} table{font-size:13px}.wrap{padding:0 6px}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>ลงเวลา พิมานใจ โฮมแคร์</h1>
+  <div class="sub" id="userGreeting">สวัสดี</div>
+</header>
+<div class="wrap">
+  <div class="card">
+    <div class="message" id="formMessage" style="display:none"></div>
+    <h2>ขั้นตอน 1: เลือกชื่อและรอบเวร</h2>
+    <div class="grid">
+      <div><label>วันที่</label><input id="workDate" type="date"></div>
+      <div><label>รอบเวร</label><select id="shift"><option value="08:00-20:00">เวร Day 08:00-20:00</option><option value="20:00-08:00">เวร Night 20:00-08:00</option></select></div>
+      <div><label>ชื่อ - สกุล</label><input id="fullName" disabled /></div>
+      <div><label>ชื่อผู้ใช้</label><input id="userNameField" disabled /></div>
+      <div style="grid-column:span 6"><button onclick="goToStep2()" class="btn2">ถัดไป</button></div>
+    </div>
+  </div>
+  <div class="card hide" id="step2Card">
+    <h2>ขั้นตอน 2: กรอกข้อมูลที่เหลือ</h2>
+    <div class="grid">
+      <div><label>ตำแหน่ง</label><select id="position"><option>CM</option><option>CG</option><option>แม่บ้าน</option><option>พยาบาล</option><option>นักกายภาพ</option><option>แพทย์</option><option>อื่น ๆ</option></select></div>
+      <div><label>เวลามา</label><input id="timeIn" type="time"></div>
+      <div><label>เวลากลับ</label><input id="timeOut" type="time"></div>
+      <div><label>ลงชื่อ</label><input id="signature" placeholder="พิมพ์ชื่อ/ลายเซ็น" /></div>
+      <div style="grid-column:span 2">
+        <label style="display:flex;align-items:center;gap:10px;margin:0;font-weight:700;font-size:14px"><input id="onDuty" type="checkbox" style="width:auto;margin:0"> เฝ้าไข้คนไข้</label>
+        <div id="onDutyTimes" style="margin-top:8px;display:none;gap:8px;align-items:center">
+          <label class="small left" style="width:110px;margin:0;font-weight:600">เวลาเริ่ม</label><input id="onDutyStart" type="time" style="width:150px;margin-right:8px">
+          <label class="small left" style="width:80px;margin:0;font-weight:600">เวลาสิ้นสุด</label><input id="onDutyEnd" type="time" style="width:150px">
+        </div>
+      </div>
+      <div style="grid-column:span 2"><label>หมายเหตุ</label><input id="note" placeholder="เช่น ลาป่วย/มาสาย/OT" /></div>
+      <div><label>เดือนรายงาน</label><input id="reportMonth" type="month"></div>
+      <div><label>&nbsp;</label><button onclick="saveRecord()" class="btn5">บันทึกข้อมูล</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="actions"><button onclick="renderTable()">รีเฟรชตาราง</button><button onclick="toggleAllSelection()" class="btn3">เลือกทั้งหมด</button><button onclick="exportCSV()" class="btn5">ส่งออก Excel/CSV</button><button onclick="printSelectedRows()" class="btn3">PDF</button><button onclick="logout()" class="btn4">ออกจากระบบ</button><span id="selectedCount" class="small" style="margin-left:auto">เลือก 0 รายการ</span></div>
+  </div>
+  <div class="card">
+    <table id="attendanceTable">
+      <thead><tr><th style="width:60px">เลือก</th><th style="width:150px">วันที่</th><th>ชื่อ - สกุล</th><th style="width:100px">ตำแหน่ง</th><th style="width:90px">เฝ้าไข้</th><th style="width:95px">เวลามา</th><th style="width:95px">เวลากลับ</th><th style="width:130px">ลงชื่อ</th><th>หมายเหตุ</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const currentUserKey = 'pimanjai_current_user';
+const attendanceKey = 'pimanjai_attendance';
+const logsKey = 'pimanjai_user_logs';
+const selectedRows = new Set();
+let editId = null;
+function loadCurrentUser(){ try{ return JSON.parse(sessionStorage.getItem(currentUserKey)); }catch(e){ return null; }}
+function loadData(){ return JSON.parse(localStorage.getItem(attendanceKey) || '[]'); }
+function storeData(data){ localStorage.setItem(attendanceKey, JSON.stringify(data)); }
+function loadLogs(){ return JSON.parse(localStorage.getItem(logsKey) || '[]'); }
+function storeLogs(logs){ localStorage.setItem(logsKey, JSON.stringify(logs)); }
+function addLog(action){ const user=loadCurrentUser(); if(!user) return; const logs = loadLogs(); logs.unshift({ id: Date.now(), username:user.username, fullName:user.fullName, role:user.role, action, time:new Date().toISOString() }); storeLogs(logs); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function nowTime(){ return new Date().toTimeString().slice(0,5); }
+function checkAuth(){ const user = loadCurrentUser(); if(!user) location.href='index.html'; if(user.role==='admin') location.href='admin.html'; $('userGreeting').textContent = `สวัสดี ${user.fullName}`; $('fullName').value = user.fullName; $('userNameField').value = user.username; }
+function init(){ checkAuth(); $('workDate').value = todayISO(); $('timeIn').value = nowTime(); $('reportMonth').value = todayISO().slice(0,7); renderTable(); }
+function showMessage(text, isError=false){ const message = $('formMessage'); message.textContent = text; message.style.display = 'block'; message.style.background = isError ? '#fee2e2' : '#e0f2fe'; message.style.color = isError ? '#b91c1c' : '#0369a1'; setTimeout(()=> message.style.display='none', 3000); }
+function goToStep2(){ if(!$('workDate').value){ showMessage('กรุณาเลือกวันที่', true); return; } if(!$('shift').value){ showMessage('กรุณาเลือกเวร', true); return; } $('step2Card').classList.remove('hide'); window.scrollTo({top: $('step2Card').offsetTop - 24, behavior:'smooth'}); }
+function saveRecord(){ const user = loadCurrentUser(); if(!user){ location.href='index.html'; return; }
+  const rec = { id: editId || Date.now(), userId:user.username, fullName:user.fullName, username:user.username, date:$('workDate').value, shift:$('shift').value, position:$('position').value, onDuty:$('onDuty').checked, onDutyStart:$('onDutyStart').value, onDutyEnd:$('onDutyEnd').value, timeIn:$('timeIn').value, timeOut:$('timeOut').value, signature:$('signature').value.trim(), note:$('note').value.trim(), reportMonth:$('reportMonth').value || $('workDate').value.slice(0,7) };
+  if(editId){ const data = loadData().map(item=> item.id===editId ? rec : item); storeData(data); editId = null; showMessage('แก้ไขข้อมูลเรียบร้อย'); }
+  else { const data = loadData(); data.push(rec); storeData(data); showMessage('บันทึกข้อมูลเรียบร้อย'); }
+  setReportMonthFromDate(rec.date); clearForm(); renderTable(); document.querySelector('html').scrollTop = document.body.scrollTop = $('attendanceTable').offsetTop - 24; }
+function clearForm(){ ['timeOut','signature','note','onDutyStart','onDutyEnd'].forEach(id=>{ if($(id)) $(id).value=''; }); $('onDuty').checked=false; $('onDutyTimes').style.display='none'; $('timeIn').value=nowTime(); editId = null; }
+function editRecord(id){ const rows = loadData().filter(r=> r.userId===loadCurrentUser().username); const item = rows.find(r=> r.id===id); if(!item) return; editId = id; $('step2Card').classList.remove('hide'); $('workDate').value = item.date; $('shift').value = item.shift; $('position').value = item.position; $('timeIn').value = item.timeIn; $('timeOut').value = item.timeOut; $('signature').value = item.signature; $('note').value = item.note; $('reportMonth').value = item.reportMonth || item.date.slice(0,7); $('onDuty').checked = !!item.onDuty; if(item.onDuty){ $('onDutyTimes').style.display='flex'; $('onDutyStart').value=item.onDutyStart; $('onDutyEnd').value=item.onDutyEnd; } else { $('onDutyTimes').style.display='none'; $('onDutyStart').value=''; $('onDutyEnd').value=''; } window.scrollTo({top:$('step2Card').offsetTop - 24, behavior:'smooth'}); }
+function deleteRecord(id){ if(!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return; const data = loadData().filter(r=> r.id!==id); storeData(data); renderTable(); showMessage('ลบข้อมูลเรียบร้อย'); }
+function setReportMonthFromDate(dateValue){ if(dateValue){ $('reportMonth').value = dateValue.slice(0,7); } }
+function renderTable(){ const month = $('reportMonth').value || todayISO().slice(0,7); const user = loadCurrentUser(); const rows = loadData().filter(r=> r.userId===user.username && r.date.startsWith(month)); const tbody = $('attendanceTable').querySelector('tbody'); tbody.innerHTML=''; rows.sort((a,b)=> (a.date+a.shift).localeCompare(b.date+b.shift)); selectedRows.clear(); rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td><input type="checkbox" onchange="toggleRowSelection(${r.id})"></td><td>${r.date}<br>${r.shift}</td><td class="left">${r.fullName}</td><td>${r.position}</td><td>${r.onDuty?`ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})`:''}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${r.signature||r.fullName}</td><td class="left">${r.note||''}</td>`; tbody.appendChild(tr); }); if(rows.length===0){ tbody.innerHTML='<tr><td colspan="9">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; } updateSelectedCount(rows.length); }
+function updateSelectedCount(total){ const count=selectedRows.size; $('selectedCount').textContent = `เลือก ${count} รายการ จาก ${total}`; }
+function toggleRowSelection(id){ if(selectedRows.has(id)) selectedRows.delete(id); else selectedRows.add(id); updateSelectedCount(document.querySelectorAll('#attendanceTable tbody tr').length); }
+function toggleAllSelection(){ const inputs = Array.from(document.querySelectorAll('#attendanceTable tbody input[type=checkbox]')); const allSelected = inputs.every(i=>i.checked); inputs.forEach(i=> i.checked = !allSelected); selectedRows.clear(); if(!allSelected){ inputs.forEach(i=> selectedRows.add(Number(i.closest('tr').dataset.id || 0))); } updateSelectedCount(inputs.length); }
+function getSelectedExportRows(){ const month = $('reportMonth').value || todayISO().slice(0,7); const user = loadCurrentUser(); return loadData().filter(r=> r.userId===user.username && r.date.startsWith(month) && selectedRows.has(r.id)); }
+  const rows=[['วันที่','รอบเวร','ชื่อ - สกุล','ตำแหน่ง','เฝ้าไข้','เวลามา','เวลากลับ','ลงชื่อ','หมายเหตุ'], ...getSelectedExportRows().map(r=> [r.date,r.shift,r.fullName,r.position,r.onDuty?`ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})`:'',r.timeIn,r.timeOut,r.signature,r.note])]; if(rows.length<=1){ showMessage('โปรดเลือกผู้ที่ต้องการส่งออกก่อน', true); return; } const csv = '\ufeff' + rows.map(r=> r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n'); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})); a.download='attendance.csv'; a.click(); }
+function printSelectedRows(){ const rows=getSelectedExportRows(); if(rows.length===0){ showMessage('โปรดเลือกผู้ที่ต้องการสรุปก่อน', true); return; } const month=$('reportMonth').value || todayISO().slice(0,7); const [y,m]=month.split('-'); const title=`หน่วยงาน พิมานใจ โฮมแคร์ เดือน ${m} พ.ศ. ${Number(y)+543}`; const rowHtml = rows.map(r=> `<tr><td>${r.date}<br>${r.shift}</td><td>${r.fullName}</td><td>${r.position}</td><td>${r.onDuty?`ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})`:''}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td>${r.signature||r.fullName}</td><td>${r.note||''}</td></tr>`).join(''); const html=`<!doctype html><html><head><meta charset="utf-8"><title>PDF</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e9;padding:8px;text-align:left}th{background:#eef2ff}.signature{font-family:'Brush Script MT',cursive;font-size:18px}</style></head><body><h2 style="text-align:center">สมุดปฏิบัติงาน</h2><p style="text-align:center">${title}</p><table><thead><tr><th>วันที่</th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>เฝ้าไข้</th><th>เวลามา</th><th>เวลากลับ</th><th>ลงชื่อ</th><th>หมายเหตุ</th></tr></thead><tbody>${rowHtml}</tbody></table></body></html>`; const win=window.open('','_blank'); if(!win){ showMessage('เปิดหน้าต่างพิมพ์ไม่ได้ โปรดลองอีกครั้ง', true); return; } win.document.write(html); win.document.close(); win.focus(); win.print(); }
+function logout(){ addLog('logout'); sessionStorage.removeItem(currentUserKey); location.href='index.html'; }
+$('onDuty').addEventListener('change', ()=>{ const show=$('onDuty').checked; $('onDutyTimes').style.display = show ? 'flex' : 'none'; if(show){ $('onDutyStart').value = $('onDutyStart').value || $('timeIn').value; $('onDutyEnd').value = $('onDutyEnd').value || $('timeOut').value; } });
+$('reportMonth').addEventListener('change', renderTable);
+$('workDate').addEventListener('change', ()=>{ $('reportMonth').value = $('workDate').value.slice(0,7); });
+init();
+</script>
+</body>
+</html>
