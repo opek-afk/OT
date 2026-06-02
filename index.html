@@ -29,7 +29,7 @@
     <div class="grid">
       <div><label>วันที่</label><input id="workDate" type="date"></div>
       <div><label>รอบเวร</label><select id="shift"><option value="08:00-20:00">เวร Day 08:00-20:00</option><option value="20:00-08:00">เวร Night 20:00-08:00</option></select></div>
-          <div><label>ชื่อ - สกุล</label><select id="fullName"><option value="">เลือกชื่อ</option><option value="คุณนัธทวัฒน์  อุราแก้ว">1. คุณนัธทวัฒน์  อุราแก้ว</option><option value="คุณวิลาวัลย์     พรมดอนกลอย">2. คุณวิลาวัลย์     พรมดอนกลอย</option><option value="คุณนันทพล    สิงห์ประเสริฐ">3. คุณนันทพล    สิงห์ประเสริฐ</option><option value="คุณปุณญิสา   ศรีสาร">4. คุณปุณญิสา   ศรีสาร</option><option value="พญ.มนัญญา ภิรมย์">5. พญ.มนัญญา ภิรมย์</option><option value="คุณสุรนันท์ กลิ่นศรีสุข">6. คุณสุรนันท์ กลิ่นศรีสุข</option><option value="คุณนภาวิไล  ดาวตรง">7. คุณนภาวิไล  ดาวตรง</option><option value="คุณจรีพร  ลาวงค์">8. คุณจรีพร  ลาวงค์</option><option value="คุณสุพัฒตรา  แสงบุตร">9. คุณสุพัฒตรา  แสงบุตร</option><option value="คุณนางสาวพิกุล คำงาม">10. คุณนางสาวพิกุล คำงาม</option><option value="คุณศิริรัตน์ ไชยศรีทา">11. คุณศิริรัตน์ ไชยศรีทา</option><option value="คุณนาง ทองคำ รมมนตรี">12. คุณนาง ทองคำ รมมนตรี</option><option value="คุณญาณิน สาแก้ว">13. คุณญาณิน สาแก้ว</option><option value="คุณจันทร์เพ็ญ เสียงไพรพันธ์">14. คุณจันทร์เพ็ญ เสียงไพรพันธ์</option></select></div>
+          <div><label>ชื่อ - สกุล</label><select id="fullName"><option value="" disabled selected hidden>เลือกชื่อ</option><option value="คุณนัธทวัฒน์  อุราแก้ว">1. คุณนัธทวัฒน์  อุราแก้ว</option><option value="คุณวิลาวัลย์     พรมดอนกลอย">2. คุณวิลาวัลย์     พรมดอนกลอย</option><option value="คุณนันทพล    สิงห์ประเสริฐ">3. คุณนันทพล    สิงห์ประเสริฐ</option><option value="คุณปุณญิสา   ศรีสาร">4. คุณปุณญิสา   ศรีสาร</option><option value="พญ.มนัญญา ภิรมย์">5. พญ.มนัญญา ภิรมย์</option><option value="คุณสุรนันท์ กลิ่นศรีสุข">6. คุณสุรนันท์ กลิ่นศรีสุข</option><option value="คุณนภาวิไล  ดาวตรง">7. คุณนภาวิไล  ดาวตรง</option><option value="คุณจรีพร  ลาวงค์">8. คุณจรีพร  ลาวงค์</option><option value="คุณสุพัฒตรา  แสงบุตร">9. คุณสุพัฒตรา  แสงบุตร</option><option value="คุณนางสาวพิกุล คำงาม">10. คุณนางสาวพิกุล คำงาม</option><option value="คุณศิริรัตน์ ไชยศรีทา">11. คุณศิริรัตน์ ไชยศรีทา</option><option value="คุณนาง ทองคำ รมมนตรี">12. คุณนาง ทองคำ รมมนตรี</option><option value="คุณญาณิน สาแก้ว">13. คุณญาณิน สาแก้ว</option><option value="คุณจันทร์เพ็ญ เสียงไพรพันธ์">14. คุณจันทร์เพ็ญ เสียงไพรพันธ์</option></select></div>
       <div><label>ตำแหน่ง</label><select id="position"><option>CM</option><option>CG</option><option>แม่บ้าน</option><option>พยาบาล</option><option>นักกายภาพ</option><option>แพทย์</option><option>อื่น ๆ</option></select></div>
       <div><label>เวลามา</label><input id="timeIn" type="time"></div>
       <div><label>เวลากลับ</label><input id="timeOut" type="time"></div>
@@ -207,6 +207,10 @@ $('onDuty').addEventListener('change', ()=>{
 });
 
 $('reportMonth').addEventListener('change', renderTable);
+$('workDate').addEventListener('change', ()=>{
+  const dateValue = $('workDate').value;
+  if(dateValue){ $('reportMonth').value = dateValue.slice(0,7); }
+});
 init();
 </script>
 </body>
