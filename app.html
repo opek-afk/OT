@@ -77,18 +77,41 @@ function storeData(data){ localStorage.setItem(attendanceKey, JSON.stringify(dat
 function loadLogs(){ return JSON.parse(localStorage.getItem(logsKey) || '[]'); }
 function storeLogs(logs){ localStorage.setItem(logsKey, JSON.stringify(logs)); }
 function loadUsers(){ return JSON.parse(localStorage.getItem(usersKey) || '[]'); }
+function loadLegacyNames(){ try{ return JSON.parse(localStorage.getItem('pimanjai_legacy_names') || 'null'); }catch(e){ return null; }}
 function addLog(action){ const user=loadCurrentUser(); if(!user) return; const logs = loadLogs(); logs.unshift({ id: Date.now(), username:user.username, fullName:user.fullName, role:user.role, action, time:new Date().toISOString() }); storeLogs(logs); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function nowTime(){ return new Date().toTimeString().slice(0,5); }
-function populateUserList(){ const users = loadUsers().filter(u=>u.role!=='admin'); const select=$('fullName'); select.innerHTML='<option value="" disabled selected>-- เลือกชื่อ --</option>'; users.forEach(u=>{ const opt = document.createElement('option'); opt.value=u.fullName; opt.textContent=u.fullName; select.appendChild(opt); }); }
-function checkAuth(){ const user = loadCurrentUser(); if(!user) location.href='index.html'; if(user.role==='admin') location.href='admin.html'; $('userGreeting').textContent = `สวัสดี ${user.fullName}`; populateUserList(); $('fullName').value = user.fullName; $('userNameField').value = user.username; }
+function populateUserList(){ const select=$('fullName'); select.innerHTML=''; // prefer legacy list if present
+  const legacy = loadLegacyNames(); let names = [];
+  if(Array.isArray(legacy) && legacy.length>0){ names = legacy.slice(); }
+  else {
+    // fallback: use distinct names from attendance data if available
+    const data = loadData(); const fromData = Array.from(new Set(data.map(d=>d.fullName).filter(Boolean)));
+    if(fromData.length>0) names = fromData;
+    else names = loadUsers().filter(u=>u.role!=='admin').map(u=>u.fullName);
+  }
+  // normalize and dedupe
+  names = Array.from(new Set(names.map(n=>String(n).trim()).filter(n=>n)));
+  select.insertAdjacentHTML('beforeend', '<option value="" disabled selected>-- เลือกชื่อ --</option>');
+  names.forEach(name=>{ const opt = document.createElement('option'); opt.value = name; opt.textContent = name; select.appendChild(opt); });
+}
+function checkAuth(){ const user = loadCurrentUser(); if(!user) location.href='index.html'; if(user.role==='admin') location.href='admin.html'; $('userGreeting').textContent = `สวัสดี ${user.fullName}`; populateUserList(); // set selected name to logged-in user's name if present, otherwise leave placeholder
+  const select = $('fullName'); const opt = Array.from(select.options).find(o=>o.value===user.fullName);
+  if(opt) select.value = user.fullName;
+  else {
+    // insert user's name as a selectable option at top
+    const newOpt = document.createElement('option'); newOpt.value = user.fullName; newOpt.textContent = user.fullName; select.insertBefore(newOpt, select.firstChild); select.value = user.fullName;
+  }
+  // always show logged-in username in userNameField
+  $('userNameField').value = user.username;
+}
 function init(){ checkAuth(); $('workDate').value = todayISO(); $('timeIn').value = nowTime(); $('reportMonth').value = todayISO().slice(0,7); renderTable(); }
 function showMessage(text, isError=false){ const message = $('formMessage'); message.textContent = text; message.style.display = 'block'; message.style.background = isError ? '#fee2e2' : '#e0f2fe'; message.style.color = isError ? '#b91c1c' : '#0369a1'; setTimeout(()=> message.style.display='none', 3000); }
 function goToStep2(){ if(!$('workDate').value){ showMessage('กรุณาเลือกวันที่', true); return; } if(!$('shift').value){ showMessage('กรุณาเลือกเวร', true); return; } $('step2Card').classList.remove('hide'); window.scrollTo({top: $('step2Card').offsetTop - 24, behavior:'smooth'}); }
 function saveRecord(){ const user = loadCurrentUser(); if(!user){ location.href='index.html'; return; }
   const selectedFullName = $('fullName').value; if(!selectedFullName){ showMessage('กรุณาเลือกชื่อ-สกุล', true); return; }
   const selectedUser = loadUsers().find(u=>u.fullName===selectedFullName); if(!selectedUser){ showMessage('ไม่พบข้อมูลผู้ใช้ที่เลือก', true); return; }
-  const rec = { id: editId || Date.now(), userId:selectedUser.username, fullName:selectedFullName, username:selectedUser.username, date:$('workDate').value, shift:$('shift').value, position:$('position').value, onDuty:$('onDuty').checked, onDutyStart:$('onDutyStart').value, onDutyEnd:$('onDutyEnd').value, timeIn:$('timeIn').value, timeOut:$('timeOut').value, signature:$('signature').value.trim(), note:$('note').value.trim(), reportMonth:$('reportMonth').value || $('workDate').value.slice(0,7) };
+    const rec = { id: editId || Date.now(), userId:user.username, fullName:selectedFullName, username:user.username, date:$('workDate').value, shift:$('shift').value, position:$('position').value, onDuty:$('onDuty').checked, onDutyStart:$('onDutyStart').value, onDutyEnd:$('onDutyEnd').value, timeIn:$('timeIn').value, timeOut:$('timeOut').value, signature:$('signature').value.trim(), note:$('note').value.trim(), reportMonth:$('reportMonth').value || $('workDate').value.slice(0,7) };
   if(editId){ const data = loadData().map(item=> item.id===editId ? rec : item); storeData(data); editId = null; showMessage('แก้ไขข้อมูลเรียบร้อย'); }
   else { const data = loadData(); data.push(rec); storeData(data); showMessage('บันทึกข้อมูลเรียบร้อย'); }
   setReportMonthFromDate(rec.date); clearForm(); renderTable(); document.querySelector('html').scrollTop = document.body.scrollTop = $('attendanceTable').offsetTop - 24; }
@@ -96,7 +119,7 @@ function clearForm(){ ['timeOut','signature','note','onDutyStart','onDutyEnd'].f
 function editRecord(id){ const data = loadData(); const item = data.find(r=> r.id===id); if(!item) return; editId = id; $('step2Card').classList.remove('hide'); $('workDate').value = item.date; $('shift').value = item.shift; $('fullName').value = item.fullName; $('position').value = item.position; $('timeIn').value = item.timeIn; $('timeOut').value = item.timeOut; $('signature').value = item.signature; $('note').value = item.note; $('reportMonth').value = item.reportMonth || item.date.slice(0,7); $('onDuty').checked = !!item.onDuty; if(item.onDuty){ $('onDutyTimes').style.display='flex'; $('onDutyStart').value=item.onDutyStart; $('onDutyEnd').value=item.onDutyEnd; } else { $('onDutyTimes').style.display='none'; $('onDutyStart').value=''; $('onDutyEnd').value=''; } window.scrollTo({top:$('step2Card').offsetTop - 24, behavior:'smooth'}); }
 function deleteRecord(id){ if(!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return; const data = loadData().filter(r=> r.id!==id); storeData(data); renderTable(); showMessage('ลบข้อมูลเรียบร้อย'); }
 function setReportMonthFromDate(dateValue){ if(dateValue){ $('reportMonth').value = dateValue.slice(0,7); } }
-function renderTable(){ const month = $('reportMonth').value || todayISO().slice(0,7); const rows = loadData().filter(r=> r.date.startsWith(month)); const tbody = $('attendanceTable').querySelector('tbody'); tbody.innerHTML=''; rows.sort((a,b)=> (a.date+a.shift).localeCompare(b.date+b.shift)); selectedRows.clear(); rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td><input type="checkbox" onchange="toggleRowSelection(${r.id})"></td><td>${r.date}<br>${r.shift}</td><td class="left">${r.fullName}</td><td>${r.position}</td><td>${r.onDuty?`ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})`:''}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${r.signature||r.fullName}</td><td class="left">${r.note||''}</td>`; tbody.appendChild(tr); }); if(rows.length===0){ tbody.innerHTML='<tr><td colspan="9">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; } updateSelectedCount(rows.length); }
+function renderTable(){ const month = $('reportMonth').value || todayISO().slice(0,7); const user = loadCurrentUser(); if(!user) return; const rows = loadData().filter(r=> r.userId===user.username && r.date.startsWith(month)); const tbody = $('attendanceTable').querySelector('tbody'); tbody.innerHTML=''; rows.sort((a,b)=> (a.date+a.shift).localeCompare(b.date+b.shift)); selectedRows.clear(); rows.forEach(r=>{ const tr=document.createElement('tr'); tr.dataset.id = r.id; tr.innerHTML = `<td><input type="checkbox" onchange="toggleRowSelection(${r.id})"></td><td>${r.date}<br>${r.shift}</td><td class="left">${r.fullName}</td><td>${r.position}</td><td>${r.onDuty?`ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})`:''}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${r.signature||r.fullName}</td><td class="left">${r.note||''}</td>`; tbody.appendChild(tr); }); if(rows.length===0){ tbody.innerHTML='<tr><td colspan="9">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; } updateSelectedCount(rows.length); }
 function updateSelectedCount(total){ const count=selectedRows.size; $('selectedCount').textContent = `เลือก ${count} รายการ จาก ${total}`; }
 function toggleRowSelection(id){ if(selectedRows.has(id)) selectedRows.delete(id); else selectedRows.add(id); updateSelectedCount(document.querySelectorAll('#attendanceTable tbody tr').length); }
 function toggleAllSelection(){ const inputs = Array.from(document.querySelectorAll('#attendanceTable tbody input[type=checkbox]')); const allSelected = inputs.every(i=>i.checked); inputs.forEach(i=> i.checked = !allSelected); selectedRows.clear(); if(!allSelected){ inputs.forEach(i=> selectedRows.add(Number(i.closest('tr').dataset.id || 0))); } updateSelectedCount(inputs.length); }
@@ -107,6 +130,10 @@ function logout(){ addLog('logout'); sessionStorage.removeItem(currentUserKey); 
 $('onDuty').addEventListener('change', ()=>{ const show=$('onDuty').checked; $('onDutyTimes').style.display = show ? 'flex' : 'none'; if(show){ $('onDutyStart').value = $('onDutyStart').value || $('timeIn').value; $('onDutyEnd').value = $('onDutyEnd').value || $('timeOut').value; } });
 $('reportMonth').addEventListener('change', renderTable);
 $('workDate').addEventListener('change', ()=>{ $('reportMonth').value = $('workDate').value.slice(0,7); });
+$('fullName').addEventListener('change', ()=>{
+  const sel = $('fullName').value; const user = loadUsers().find(u=>u.fullName===sel);
+  $('userNameField').value = (user && user.username) ? user.username : (loadCurrentUser()||{}).username || '';
+});
 init();
 </script>
 </body>
