@@ -117,40 +117,74 @@ function clearForm(){ ['fullName','timeOut','signature','note','onDutyStart','on
 function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; $('workDate').value = r.date || ''; $('shift').value = r.shift || $('shift').value; $('fullName').value = r.fullName || ''; $('position').value = r.position || ''; $('timeIn').value = r.timeIn || ''; $('timeOut').value = r.timeOut || ''; $('signature').value = r.signature || r.fullName || ''; $('note').value = r.note || ''; $('onDuty').checked = !!r.onDuty; if(r.onDuty){ $('onDutyTimes').style.display='flex'; $('onDutyStart').value = r.onDutyStart || ''; $('onDutyEnd').value = r.onDutyEnd || ''; } else { $('onDutyTimes').style.display='none'; $('onDutyStart').value=''; $('onDutyEnd').value=''; } window.scrollTo({top:0,behavior:'smooth'}); }
 function deleteRecord(id){ if(confirm('ต้องการลบรายการนี้ใช่หรือไม่?')){ store(load().filter(r=>r.id!==id)); renderTable(); } }
 function renderTable(){
-  const month = selectedMonth(); const [y,m]=month.split('-');
+  const month = selectedMonth();
+  const [y,m] = month.split('-');
   const rows = load().filter(r=>r.date && r.date.startsWith(month)).sort((a,b)=>(a.date+a.shift+a.position).localeCompare(b.date+b.shift+b.position));
   if(!selectionInitialized){ rows.forEach(r=>selectedRows.add(r.id)); selectionInitialized = true; }
-  const currentIds = new Set(rows.map(r=>r.id)); selectedRows.forEach(id=>{ if(!currentIds.has(id)) selectedRows.delete(id); });
+  const currentIds = new Set(rows.map(r=>r.id));
+  selectedRows.forEach(id=>{ if(!currentIds.has(id)) selectedRows.delete(id); });
   $('printSub').textContent = `หน่วยงาน พิมานใจ โฮมแคร์ เดือน ${thaiMonths[Number(m)-1]} พ.ศ. ${Number(y)+543}`;
-  const tbody = $('attendanceTable').querySelector('tbody'); tbody.innerHTML='';
+  const tbody = $('attendanceTable').querySelector('tbody');
+  tbody.innerHTML='';
   const groups = {};
-  rows.forEach(r=>{ const g=r.date+'|'+r.shift; (groups[g] ||= []).push(r); });
+  rows.forEach(r=>{ const g = `${r.date}|${r.shift}`; (groups[g] ||= []).push(r); });
   Object.keys(groups).sort().forEach(g=>{
-    const [date,shift]=g.split('|'); const arr=groups[g];
+    const [date,shift] = g.split('|');
+    const arr = groups[g];
     arr.forEach((r,i)=>{
       const dutyText = r.onDuty ? `ใช่${(r.onDutyStart||r.onDutyEnd) ? ` (${r.onDutyStart||''}-${r.onDutyEnd||''})` : ''}` : '';
       const isChecked = selectedRows.has(r.id) ? 'checked' : '';
-      const tr=document.createElement('tr');
+      const tr = document.createElement('tr');
       tr.dataset.id = r.id;
       tr.innerHTML = `<td class="no-print"><input type="checkbox" ${isChecked} onchange="toggleRowSelection(${r.id})"></td>${i===0?`<td class="shift" rowspan="${arr.length}">${thDate(date)}\n${shift}</td>`:''}<td class="left">${i+1}. ${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${dutyText}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td class="left">${escapeHtml(r.note||'')}</td><td class="no-print"><button onclick="editRecord(${r.id})" class="small">แก้ไข</button><button onclick="deleteRecord(${r.id})" class="small btn4">ลบ</button></td>`;
       tbody.appendChild(tr);
     });
   });
   if(rows.length===0){ tbody.innerHTML='<tr><td colspan="10">ยังไม่มีข้อมูลในเดือนนี้</td></tr>'; }
-}function updateSelectedCount(total){ const count = selectedRows.size; $('selectedCount').textContent = `เลือก ${count} รายการ จาก ${total}`; }
+  updateSelectedCount(rows.length);
+}
+
+function updateSelectedCount(total){ const count = selectedRows.size; $('selectedCount').textContent = `เลือก ${count} รายการ จาก ${total}`; }
+
 function toggleRowSelection(id){ if(selectedRows.has(id)){ selectedRows.delete(id); } else { selectedRows.add(id); } updateSelectedCount(document.querySelectorAll('#attendanceTable tbody tr').length); }
+
 function toggleAllSelection(){ const rows = load().filter(r=>r.date && r.date.startsWith(selectedMonth())); const allSelected = rows.length > 0 && rows.every(r=>selectedRows.has(r.id)); if(allSelected){ rows.forEach(r=>selectedRows.delete(r.id)); } else { rows.forEach(r=>selectedRows.add(r.id)); } renderTable(); }
-function getSelectedExportRows(){ return load().filter(r=>r.date && r.date.startsWith(selectedMonth())).sort((a,b)=>(a.date+a.shift+a.position).localeCompare(b.date+b.shift+b.position)).filter(r=>selectedRows.has(r.id)); }
-function printSelectedRows(){ const rows = getSelectedExportRows(); if(rows.length===0){ return alert('โปรดเลือกผู้ที่ต้องการสรุปก่อนพิมพ์'); }
-  const month = selectedMonth(); const [y,m]=month.split('-'); const title = `หน่วยงาน พิมานใจ โฮมแคร์ เดือน ${thaiMonths[Number(m)-1]} พ.ศ. ${Number(y)+543}`;
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>PDF</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e9;padding:8px;text-align:left}th{background:#eef2ff}.signature{font-family:'Brush Script MT',cursive;font-size:18px}</style></head><body><h2>สมุดปฏิบัติงาน</h2><p>${title}</p><table><thead><tr><th>วันที่</th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>เฝ้าไข้</th><th>เวลามา</th><th>เวลากลับ</th><th>ลงชื่อ</th><th>หมายเหตุ</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${thDate(r.date)}<br>${r.shift}</td><td>${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${r.onDuty ? `ใช่${(r.onDutyStart||r.onDutyEnd)?` (${r.onDutyStart||''}-${r.onDutyEnd||''})`:''}` : ''}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td>${escapeHtml(r.note||'')}</td></tr>`).join('')}</tbody></table></body></html>`;
-  const win = window.open('', '_blank'); if(!win) return alert('ไม่สามารถเปิดหน้าต่างพิมพ์ได้ โปรดลองอีกครั้ง'); win.document.write(html); win.document.close(); win.focus(); win.print(); }function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function getSelectedExportRows(){
+  return load().filter(r=>r.date && r.date.startsWith(selectedMonth()))
+    .sort((a,b)=>(a.date+a.shift+a.position).localeCompare(b.date+b.shift+b.position))
+    .filter(r=>selectedRows.has(r.id));
+}
+
+function printSelectedRows(){
+  const rows = getSelectedExportRows();
+  if(rows.length===0){ return alert('โปรดเลือกผู้ที่ต้องการสรุปก่อนพิมพ์'); }
+  const month = selectedMonth();
+  const [y,m] = month.split('-');
+  const title = `หน่วยงาน พิมานใจ โฮมแคร์ เดือน ${thaiMonths[Number(m)-1]} พ.ศ. ${Number(y)+543}`;
+  const rowHtml = rows.map(r=>{
+    const dutyText = r.onDuty ? `ใช่${(r.onDutyStart||r.onDutyEnd) ? ` (${r.onDutyStart||''}-${r.onDutyEnd||''})` : ''}` : '';
+    return `<tr><td>${thDate(r.date)}<br>${r.shift}</td><td>${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${dutyText}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td>${escapeHtml(r.note||'')}</td></tr>`;
+  }).join('');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>PDF</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e9;padding:8px;text-align:left}th{background:#eef2ff}.signature{font-family:'Brush Script MT',cursive;font-size:18px}</style></head><body><h2>สมุดปฏิบัติงาน</h2><p>${title}</p><table><thead><tr><th>วันที่</th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>เฝ้าไข้</th><th>เวลามา</th><th>เวลากลับ</th><th>ลงชื่อ</th><th>หมายเหตุ</th></tr></thead><tbody>${rowHtml}</tbody></table></body></html>`;
+  const win = window.open('', '_blank');
+  if(!win) return alert('ไม่สามารถเปิดหน้าต่างพิมพ์ได้ โปรดลองอีกครั้ง');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+
 function exportCSV(){
   const rows = [['วันที่','รอบเวร','ชื่อ - สกุล','ตำแหน่ง','เฝ้าไข้','เวลามา','เวลากลับ','ลงชื่อ','หมายเหตุ'], ...getSelectedExportRows().map(r=>[r.date,r.shift,r.fullName,r.position,r.onDuty ? `ใช่ (${r.onDutyStart||''}-${r.onDutyEnd||''})` : '',r.timeIn,r.timeOut,r.signature,r.note])];
   if(rows.length <= 1){ return alert('โปรดเลือกผู้ที่ต้องการส่งออกก่อน'); }
   const csv = '\ufeff' + rows.map(row=>row.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='pimanjai_attendance.csv'; a.click();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = 'pimanjai_attendance.csv';
+  a.click();
 }
+
 function clearAll(){ if(confirm('ล้างข้อมูลทั้งหมดใช่หรือไม่?')){ localStorage.removeItem(key); renderTable(); } }
 
 function applyShiftTimes(shift){ if(!shift) return; const parts=shift.split('-'); if(parts.length===2){ const s=parts[0]; const e=parts[1]; if($('timeIn')) $('timeIn').value = s; if($('timeOut')) $('timeOut').value = e; } }
@@ -159,10 +193,14 @@ $('shift').addEventListener('change', ()=>{ applyShiftTimes($('shift').value); }
 $('onDuty').addEventListener('change', ()=>{
   const show = $('onDuty').checked;
   $('onDutyTimes').style.display = show ? 'flex' : 'none';
-  if(show){ $('onDutyStart').value = $('onDutyStart').value || $('timeIn').value || $('shift').value.split('-')[0] || ''; $('onDutyEnd').value = $('onDutyEnd').value || $('timeOut').value || $('shift').value.split('-')[1] || ''; }
+  if(show){
+    $('onDutyStart').value = $('onDutyStart').value || $('timeIn').value || $('shift').value.split('-')[0] || '';
+    $('onDutyEnd').value = $('onDutyEnd').value || $('timeOut').value || $('shift').value.split('-')[1] || '';
+  }
 });
 
-$('reportMonth').addEventListener('change', renderTable); init();
+$('reportMonth').addEventListener('change', renderTable);
+init();
 </script>
 </body>
 </html>
