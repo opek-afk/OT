@@ -80,6 +80,13 @@
 <script>
 const $ = id => document.getElementById(id);
 let editId = null;
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return text.toString().replace(/[&<>"']/g, m => map[m]);
+}
+
 const key = 'pimanjai_attendance_v1';
 const selectedRows = new Set();
 let selectionInitialized = false;
@@ -92,6 +99,7 @@ function beYear(dateStr){ return new Date(dateStr).getFullYear() + 543; }
 function thDate(dateStr){ const d = new Date(dateStr+'T00:00:00'); return `${d.getDate()}/${thaiMonths[d.getMonth()].slice(0,3)}./${d.getFullYear()+543}`; }
 function selectedMonth(){ return $('reportMonth').value || todayISO().slice(0,7); }
 function init(){ $('workDate').value=todayISO(); $('timeIn').value=nowTime(); $('reportMonth').value=todayISO().slice(0,7); renderTable(); }
+function setReportMonthFromDate(dateValue){ if(dateValue){ $('reportMonth').value = dateValue.slice(0,7); } }
 function saveRecord(){
   const rec = {
     id: editId || Date.now(),
@@ -112,12 +120,12 @@ function saveRecord(){
   if(editId){ data = data.map(r=> r.id===editId ? rec : r); editId=null; }
   else data.push(rec);
   store(data);
-  const reportMonth = rec.date.slice(0,7);
-  if($('reportMonth').value !== reportMonth){ $('reportMonth').value = reportMonth; }
+  setReportMonthFromDate(rec.date);
   clearForm(); renderTable();
 }
+
 function clearForm(){ ['fullName','timeOut','signature','note','onDutyStart','onDutyEnd'].forEach(id=>{ if($(id)) $(id).value=''; }); $('onDuty').checked=false; $('onDutyTimes').style.display='none'; $('timeIn').value=nowTime(); }
-function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; $('workDate').value = r.date || ''; $('shift').value = r.shift || $('shift').value; $('fullName').value = r.fullName || ''; $('position').value = r.position || ''; $('timeIn').value = r.timeIn || ''; $('timeOut').value = r.timeOut || ''; $('signature').value = r.signature || r.fullName || ''; $('note').value = r.note || ''; $('onDuty').checked = !!r.onDuty; if(r.onDuty){ $('onDutyTimes').style.display='flex'; $('onDutyStart').value = r.onDutyStart || ''; $('onDutyEnd').value = r.onDutyEnd || ''; } else { $('onDutyTimes').style.display='none'; $('onDutyStart').value=''; $('onDutyEnd').value=''; } window.scrollTo({top:0,behavior:'smooth'}); }
+function editRecord(id){ const r=load().find(x=>x.id===id); if(!r)return; editId=id; $('workDate').value = r.date || ''; setReportMonthFromDate(r.date || $('workDate').value); $('shift').value = r.shift || $('shift').value; $('fullName').value = r.fullName || ''; $('position').value = r.position || ''; $('timeIn').value = r.timeIn || ''; $('timeOut').value = r.timeOut || ''; $('signature').value = r.signature || r.fullName || ''; $('note').value = r.note || ''; $('onDuty').checked = !!r.onDuty; if(r.onDuty){ $('onDutyTimes').style.display='flex'; $('onDutyStart').value = r.onDutyStart || ''; $('onDutyEnd').value = r.onDutyEnd || ''; } else { $('onDutyTimes').style.display='none'; $('onDutyStart').value=''; $('onDutyEnd').value=''; } window.scrollTo({top:0,behavior:'smooth'}); }
 function deleteRecord(id){ if(confirm('ต้องการลบรายการนี้ใช่หรือไม่?')){ store(load().filter(r=>r.id!==id)); renderTable(); } }
 function renderTable(){
   const month = selectedMonth();
@@ -151,7 +159,10 @@ function renderTable(){
   updateSelectedCount(rows.length);
 }
 
-function updateSelectedCount(total){ const count = selectedRows.size; $('selectedCount').textContent = `เลือก ${count} รายการ จาก ${total}`; }
+function updateSelectedCount(total){ 
+  const count = selectedRows.size; 
+  if($('selectedCount')) $('selectedCount').textContent = `เลือก ${count} รายการ จาก ${total}`; 
+}
 
 function toggleRowSelection(id){ if(selectedRows.has(id)){ selectedRows.delete(id); } else { selectedRows.add(id); } updateSelectedCount(document.querySelectorAll('#attendanceTable tbody tr').length); }
 
@@ -173,7 +184,7 @@ function printSelectedRows(){
     const dutyText = r.onDuty ? `ใช่${(r.onDutyStart||r.onDutyEnd) ? ` (${r.onDutyStart||''}-${r.onDutyEnd||''})` : ''}` : '';
     return `<tr><td>${thDate(r.date)}<br>${r.shift}</td><td>${escapeHtml(r.fullName)}</td><td>${escapeHtml(r.position)}</td><td>${dutyText}</td><td>${r.timeIn||''}</td><td>${r.timeOut||''}</td><td class="signature">${escapeHtml(r.signature||r.fullName)}</td><td>${escapeHtml(r.note||'')}</td></tr>`;
   }).join('');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>PDF</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e9;padding:8px;text-align:left}th{background:#eef2ff}.signature{font-family:'Brush Script MT',cursive;font-size:18px}</style></head><body><h2>สมุดปฏิบัติงาน</h2><p>${title}</p><table><thead><tr><th>วันที่</th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>เฝ้าไข้</th><th>เวลามา</th><th>เวลากลับ</th><th>ลงชื่อ</th><th>หมายเหตุ</th></tr></thead><tbody>${rowHtml}</tbody></table></body></html>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>PDF</title><style>body{font-family:'Sarabun','Tahoma',sans-serif;padding:20px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e9;padding:8px;text-align:left;font-size:14px}th{background:#eef2ff}.signature{font-family:'Brush Script MT',cursive;font-size:18px}</style></head><body><h2 style="text-align:center">สมุดปฏิบัติงาน</h2><p style="text-align:center">${title}</p><table><thead><tr><th>วันที่/เวร</th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>เฝ้าไข้</th><th>เวลามา</th><th>เวลากลับ</th><th>ลงชื่อ</th><th>หมายเหตุ</th></tr></thead><tbody>${rowHtml}</tbody></table></body></html>`;
   const win = window.open('', '_blank');
   if(!win) return alert('ไม่สามารถเปิดหน้าต่างพิมพ์ได้ โปรดลองอีกครั้ง');
   win.document.write(html);
@@ -206,10 +217,12 @@ $('onDuty').addEventListener('change', ()=>{
   }
 });
 
-$('reportMonth').addEventListener('change', renderTable);
+$('reportMonth').addEventListener('change', () => {
+  selectionInitialized = false;
+  renderTable();
+});
 $('workDate').addEventListener('change', ()=>{
-  const dateValue = $('workDate').value;
-  if(dateValue){ $('reportMonth').value = dateValue.slice(0,7); }
+  setReportMonthFromDate($('workDate').value);
 });
 init();
 </script>
